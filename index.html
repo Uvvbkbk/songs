@@ -14,6 +14,7 @@
   }
   .app { max-width: 1500px; margin: 0 auto; }
 
+  /* ============ 顶栏 ============ */
   .topbar {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.6rem;
@@ -50,7 +51,7 @@
   .btn-primary:hover { background: #5a7db5; }
   .btn-sm { height: 26px; padding: 0 0.7rem; font-size: 0.72rem; }
 
-  /* 表单 */
+  /* ============ 表单面板 ============ */
   .form-panel {
     background: #ffffff; border-radius: 14px;
     padding: 0.85rem 1rem; margin-bottom: 0.9rem;
@@ -71,17 +72,19 @@
   }
   .form-group {
     flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 0.25rem;
+    position: relative;
   }
   .form-group.title { flex: 2; min-width: 180px; }
   .form-group label {
     font-size: 0.7rem; color: #7a8ba8; font-weight: 600;
   }
+  .input-wrapper { position: relative; display: flex; align-items: center; }
   .form-group input {
     padding: 0 0.75rem; height: 34px;
     border: 1px solid #cdd9ea; border-radius: 8px;
     font-size: 0.85rem; background: #fafbfe; outline: none;
     transition: all 0.15s; color: #2d3e5c; font-family: inherit;
-    width: 100%;
+    width: 100%; padding-right: 2rem;
   }
   .form-group input:focus {
     border-color: #6c8fc7; background: #fff;
@@ -93,6 +96,33 @@
     box-shadow: 0 0 0 3px rgba(208,82,82,0.12) !important;
   }
   .form-group input::placeholder { color: #a9b8ce; }
+  
+  /* 快捷下拉按钮 */
+  .dropdown-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 24px; height: 24px; border-radius: 6px;
+    background: #eef2f9; color: #6c8fc7; border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; transition: 0.15s;
+  }
+  .dropdown-btn:hover { background: #dde6f2; color: #4a6a94; }
+  
+  /* 快捷选择面板 */
+  .quick-panel {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid #cdd9ea; border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(59,85,120,0.15);
+    z-index: 100; max-height: 200px; overflow-y: auto;
+    margin-top: 4px; display: none; flex-wrap: wrap; gap: 4px; padding: 6px;
+  }
+  .quick-panel.show { display: flex; }
+  .quick-item {
+    background: #eef2f9; color: #4a6a94; padding: 0.25rem 0.6rem;
+    border-radius: 6px; font-size: 0.75rem; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .quick-item:hover { background: #dde6f2; }
+
   .form-buttons { display: flex; gap: 0.4rem; align-items: center; height: 34px; }
   .btn-form {
     height: 34px; padding: 0 1.1rem;
@@ -101,7 +131,7 @@
     cursor: pointer; transition: 0.15s; font-family: inherit;
   }
 
-  /* 搜索行 */
+  /* ============ 搜索行 ============ */
   .search-row {
     display: flex; gap: 0.6rem; margin-bottom: 0.6rem; align-items: center;
   }
@@ -130,15 +160,12 @@
   }
   .random-btn:hover { transform: translateY(-1px); }
 
-  /* 标签筛选 */
+  /* ============ 标签筛选 ============ */
   .tag-filter-row {
     display: flex; flex-wrap: wrap; gap: 0.35rem;
     margin-bottom: 0.9rem; align-items: center;
   }
   .tag-filter-row:empty { display: none; }
-  .tag-filter-row .label {
-    font-size: 0.72rem; color: #9aabc2; font-weight: 600; margin-right: 0.2rem;
-  }
   .tag-filter {
     background: #ffffff; color: #6c8fc7;
     border: 1px solid #cdd9ea;
@@ -153,15 +180,44 @@
     box-shadow: 0 2px 8px rgba(108,143,199,0.35);
   }
   .tag-filter .count { opacity: 0.65; font-size: 0.66rem; margin-left: 0.2rem; }
+  
+  /* 编辑标签按钮 */
+  .edit-tag-btn {
+    background: #fff4e5; color: #d87e36; border-color: #f5d5b3;
+    margin-right: 0.2rem;
+  }
+  .edit-tag-btn:hover { background: #ffeacc; border-color: #eac19c; }
+  .edit-tag-btn.editing {
+    background: #d87e36; color: #fff; border-color: #d87e36;
+  }
+  .edit-tag-btn.editing:hover { background: #c9712b; }
 
-  /* 分类网格 */
-  .categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-    gap: 1.1rem; align-items: start;
+  /* 标签编辑模式 */
+  .tag-edit-wrapper { display: flex; align-items: center; gap: 0.3rem; }
+  .tag-edit-input {
+    width: 80px; padding: 0.15rem 0.4rem;
+    border: 1px solid #a9bcd6; border-radius: 20px;
+    font-size: 0.73rem; outline: none; color: #2d3e5c;
+  }
+  .tag-edit-input:focus { border-color: #6c8fc7; box-shadow: 0 0 0 2px rgba(108,143,199,0.2); }
+  .tag-save-btn {
+    background: #6c8fc7; color: white; border: none;
+    padding: 0; border-radius: 50%;
+    font-size: 0.65rem; cursor: pointer;
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .tag-save-btn:hover { background: #5a7db5; }
+
+  /* ============ 分类瀑布流排版 ============ */
+  .categories-container {
+    column-count: 2;
+    column-gap: 1.1rem;
+    align-items: start;
   }
   @media (max-width: 940px) {
-    .categories-grid { grid-template-columns: 1fr; }
+    .categories-container { column-count: 1; }
   }
 
   .category-card {
@@ -169,12 +225,17 @@
     padding: 1.1rem 1.3rem 0.9rem 1.3rem;
     box-shadow: 0 2px 12px rgba(108,143,199,0.07);
     border: 1px solid #e5ecf6; position: relative;
+    break-inside: avoid;
+    display: inline-block; width: 100%;
+    margin-bottom: 1.1rem;
   }
   .category-card::before {
     content: '✦'; position: absolute;
     top: -8px; left: -6px;
     color: #6c8fc7; font-size: 1rem; opacity: 0.7;
   }
+  
+  /* 分类标题：居中完美对齐 */
   .category-header {
     display: flex; align-items: center; gap: 0.5rem;
     margin-bottom: 0.9rem; flex-wrap: wrap;
@@ -182,27 +243,30 @@
   .category-name-pill {
     display: inline-flex; align-items: center;
     background: #8ba9d4; color: #ffffff;
-    padding: 0.4rem 1.4rem 0.4rem 1rem;
+    padding: 0 1.2rem 0 0;
     border-radius: 30px; font-size: 1.05rem; font-weight: 700;
     letter-spacing: 0.5px;
     cursor: pointer; transition: background 0.15s;
     box-shadow: 0 3px 8px rgba(108,143,199,0.25);
     max-width: 100%; word-break: break-word;
+    min-height: 36px;
   }
   .category-name-pill::before {
-    content: ''; width: 4px; height: 60%;
+    content: ''; width: 4px; height: 16px;
     background: #5a7db5; border-radius: 2px;
-    margin-right: 0.6rem; flex-shrink: 0;
+    margin-left: 10px; margin-right: 10px; flex-shrink: 0;
+  }
+  .category-name-pill span {
+    padding-top: 2px;
   }
   .category-name-pill:hover { background: #7c9bc9; }
-  .category-name-pill.uncategorized {
-    background: #b8c5d8; cursor: default;
-  }
+  .category-name-pill.uncategorized { background: #b8c5d8; cursor: default; }
   .category-name-pill.uncategorized::before { background: #9aabc2; }
   .category-name-pill.uncategorized:hover { background: #b8c5d8; }
   .category-name-pill[contenteditable="true"] {
     background: #6c8fc7; outline: 2px solid #4a6a94; cursor: text;
   }
+
   .category-count {
     font-size: 0.72rem; color: #9aabc2; font-weight: 600;
     background: #eef2f9; padding: 0.15rem 0.55rem; border-radius: 20px;
@@ -223,7 +287,7 @@
   .icon-btn:hover { color: #4a6a94; background: #e8eff9; }
   .icon-btn.delete:hover { color: #d05252; background: #fbeaea; }
 
-  /* 歌曲列表 */
+  /* ============ 歌曲列表 ============ */
   .song-list { list-style: none; padding: 0; margin: 0; }
   .song-item {
     display: flex; align-items: center; gap: 0.6rem;
@@ -260,10 +324,11 @@
   .song-item:hover .song-actions { opacity: 1; }
 
   .empty-message {
-    grid-column: 1 / -1; text-align: center;
+    text-align: center;
     padding: 3rem 1rem; background: #ffffff;
     border-radius: 16px; color: #9aabc2;
     font-size: 0.9rem; border: 2px dashed #dde6f2;
+    width: 100%; display: block;
   }
   .empty-message span {
     font-size: 1.8rem; display: block; margin-bottom: 0.6rem; opacity: 0.6;
@@ -281,7 +346,7 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* 模态框 */
+  /* ============ 模态框 ============ */
   .modal-mask {
     position: fixed; inset: 0; background: rgba(45,62,92,0.4);
     display: none; align-items: center; justify-content: center;
@@ -316,7 +381,7 @@
     word-break: break-all;
   }
 
-  /* Toast */
+  /* ============ Toast ============ */
   .toast {
     position: fixed; bottom: 24px; left: 50%;
     transform: translateX(-50%) translateY(20px);
@@ -352,12 +417,19 @@
       </div>
       <div class="form-group">
         <label for="categoryInput">分类</label>
-        <input type="text" id="categoryInput" placeholder="例如：华语" maxlength="20" list="categoryList">
-        <datalist id="categoryList"></datalist>
+        <div class="input-wrapper">
+          <input type="text" id="categoryInput" placeholder="例如：华语" maxlength="20" autocomplete="off">
+          <button class="dropdown-btn" id="categoryDropdownBtn" title="选择已有分类">▼</button>
+        </div>
+        <div class="quick-panel" id="categoryQuickPanel"></div>
       </div>
       <div class="form-group">
         <label for="tagsInput">标签</label>
-        <input type="text" id="tagsInput" placeholder="流行, 摇滚">
+        <div class="input-wrapper">
+          <input type="text" id="tagsInput" placeholder="流行, 摇滚" autocomplete="off">
+          <button class="dropdown-btn" id="tagsDropdownBtn" title="选择已有标签">▼</button>
+        </div>
+        <div class="quick-panel" id="tagsQuickPanel"></div>
       </div>
       <div class="form-buttons">
         <button class="btn-form btn-primary" id="saveBtn">保存</button>
@@ -373,9 +445,11 @@
     <button class="random-btn" id="randomBtn" title="随机复制一首">🎲 随机</button>
   </div>
 
+  <!-- 标签筛选栏 -->
   <div class="tag-filter-row" id="tagFilterRow"></div>
 
-  <div class="categories-grid" id="categoriesGrid">
+  <!-- 分类瀑布流容器 -->
+  <div class="categories-container" id="categoriesGrid">
     <div class="loading"><span class="spinner"></span>正在加载歌单...</div>
   </div>
 </div>
@@ -419,6 +493,7 @@
   let selectedTags = new Set();
   let editingId = null;
   let token = '';
+  let isEditingTags = false;
 
   // ---------- DOM ----------
   const $ = id => document.getElementById(id);
@@ -432,7 +507,6 @@
   const titleInput = $('titleInput');
   const tagsInput = $('tagsInput');
   const categoryInput = $('categoryInput');
-  const categoryList = $('categoryList');
   const saveBtn = $('saveBtn');
   const cancelBtn = $('cancelBtn');
   const tagFilterRow = $('tagFilterRow');
@@ -442,6 +516,11 @@
   const tokenInput = $('tokenInput');
   const loginOkBtn = $('loginOkBtn');
   const loginCancelBtn = $('loginCancelBtn');
+
+  const categoryDropdownBtn = $('categoryDropdownBtn');
+  const tagsDropdownBtn = $('tagsDropdownBtn');
+  const categoryQuickPanel = $('categoryQuickPanel');
+  const tagsQuickPanel = $('tagsQuickPanel');
 
   // ============================================================
   // GitHub Gist API
@@ -466,7 +545,7 @@
 
   async function updateGist(newSongs) {
     const res = await fetch(`${GH_API}/gists/${CONFIG.GIST_ID}`, {
-      method: 'PATCH',   // ⚠️ 必须大写
+      method: 'PATCH',
       headers: {
         'Accept': 'application/vnd.github+json',
         'Authorization': `Bearer ${token}`,
@@ -516,11 +595,6 @@
     }
     return list;
   }
-  function updateCategoryDatalist() {
-    const s = new Set();
-    songs.forEach(x => { if (x.category && x.category.trim()) s.add(x.category.trim()); });
-    categoryList.innerHTML = [...s].map(c => `<option value="${escapeHtml(c)}">`).join('');
-  }
   function updateStats() {
     const total = songs.length;
     const filtered = filterSongs(currentSearch).length;
@@ -528,25 +602,73 @@
     statsDisplay.textContent = hasFilter ? `${filtered} / ${total} 首` : `${total} 首`;
   }
 
+  function updateQuickPanels() {
+    const cats = new Set();
+    const tags = new Set();
+    songs.forEach(s => {
+      if (s.category && s.category.trim()) cats.add(s.category.trim());
+      (s.tags || []).forEach(t => { if (t.trim()) tags.add(t.trim()); });
+    });
+    
+    categoryQuickPanel.innerHTML = [...cats].map(c => `<div class="quick-item" data-val="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('');
+    tagsQuickPanel.innerHTML = [...tags].map(t => `<div class="quick-item" data-val="${escapeHtml(t)}">${escapeHtml(t)}</div>`).join('');
+  }
+
+  // ============================================================
+  // 标签筛选与编辑
+  // ============================================================
   function renderTagFilter() {
     const tagCount = new Map();
     songs.forEach(s => (s.tags || []).forEach(t => {
       if (t) tagCount.set(t, (tagCount.get(t) || 0) + 1);
     }));
-    if (tagCount.size === 0) { tagFilterRow.innerHTML = ''; return; }
+    if (tagCount.size === 0 && !isEditingTags) { tagFilterRow.innerHTML = ''; return; }
+    
     const sorted = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
-    let html = `<span class="label">🏷️ 筛选:</span>`;
-    sorted.forEach(([tag, count]) => {
-      const active = selectedTags.has(tag) ? 'active' : '';
-      html += `<button class="tag-filter ${active}" data-tag="${escapeHtml(tag)}">
-        ${escapeHtml(tag)}<span class="count">${count}</span>
-      </button>`;
-    });
+    let html = '';
+
+    // 始终放在第一位的“编辑”按钮
+    if (isAdmin) {
+      if (isEditingTags) {
+        html += `<button class="tag-filter edit-tag-btn editing" id="editTagsBtn">✅ 完成编辑</button>`;
+      } else {
+        html += `<button class="tag-filter edit-tag-btn" id="editTagsBtn">✏️ 编辑标签</button>`;
+      }
+    }
+
+    if (isEditingTags) {
+      // 编辑模式：显示输入框和打勾保存
+      sorted.forEach(([tag]) => {
+        html += `<div class="tag-edit-wrapper">
+          <input type="text" class="tag-edit-input" value="${escapeHtml(tag)}" data-old="${escapeHtml(tag)}" title="回车保存">
+          <button class="tag-save-btn" title="保存该标签" data-old="${escapeHtml(tag)}">✓</button>
+        </div>`;
+      });
+    } else {
+      // 正常模式：渲染标签药丸
+      sorted.forEach(([tag, count]) => {
+        const active = selectedTags.has(tag) ? 'active' : '';
+        html += `<button class="tag-filter ${active}" data-tag="${escapeHtml(tag)}">
+          ${escapeHtml(tag)}<span class="count">${count}</span>
+        </button>`;
+      });
+    }
+    
     tagFilterRow.innerHTML = html;
   }
 
+  async function saveSingleTag(oldTag, newTag) {
+    if (!newTag || oldTag === newTag) return false;
+    const newSongs = songs.map(s => {
+      if (!s.tags || !s.tags.includes(oldTag)) return s;
+      const newTags = [...new Set(s.tags.map(t => t === oldTag ? newTag : t))];
+      return { ...s, tags: newTags };
+    });
+    return await saveToGist(newSongs, `✏️ 已将标签「${oldTag}」改为「${newTag}」`);
+  }
+
   // ============================================================
-  // 渲染
+  // 渲染分类与歌曲
   // ============================================================
   function render() {
     const filtered = filterSongs(currentSearch);
@@ -590,7 +712,9 @@
           <div class="category-header">
             <span class="category-name-pill ${isUncat ? 'uncategorized' : ''}"
                   data-category="${escapeHtml(cat)}"
-                  ${isUncat || !isAdmin ? '' : 'title="点击编辑分类名"'}>${escapeHtml(cat)}</span>
+                  ${isUncat || !isAdmin ? '' : 'title="点击编辑分类名"'}>
+              <span>${escapeHtml(cat)}</span>
+            </span>
             <span class="category-count">${list.length}</span>
             ${catActions}
           </div>
@@ -627,7 +751,7 @@
   }
 
   // ============================================================
-  // 复制
+  // 复制与随机
   // ============================================================
   function copyTitle(t) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -647,16 +771,25 @@
     } catch { showToast('❌ 复制失败'); }
     document.body.removeChild(ta);
   }
+
   function randomCopy() {
-    const pool = filterSongs(currentSearch);
-    if (pool.length === 0) { showToast('🎲 没有歌曲可随机'); return; }
+    let pool = filterSongs(currentSearch);
+    // 过滤掉分类为“还没学会”的
+    pool = pool.filter(s => {
+      const cat = (s.category && s.category.trim()) ? s.category.trim() : UNCATEGORIZED;
+      return cat !== '还没学会';
+    });
+    // 过滤掉标签里包含“还没学会”的
+    pool = pool.filter(s => !(s.tags || []).includes('还没学会'));
+
+    if (pool.length === 0) { 
+      showToast('🎲 当前没有可随机的歌曲（已排除“还没学会”）'); 
+      return; 
+    }
     const pick = pool[Math.floor(Math.random() * pool.length)];
     copyTitle(pick.title);
   }
 
-  // ============================================================
-  // 保存到 Gist
-  // ============================================================
   async function saveToGist(newSongs, successMsg) {
     if (!token) { showToast('⚠️ 请先登录管理模式'); return false; }
     if (!isConfigured()) { showToast('⚠️ 请先在代码里配置 GIST_ID'); return false; }
@@ -664,9 +797,9 @@
       showToast('⏳ 正在同步到 Gist...');
       await updateGist(newSongs);
       songs = newSongs;
+      updateQuickPanels();
       renderTagFilter();
       render();
-      updateCategoryDatalist();
       showToast(successMsg || '✅ 已同步');
       return true;
     } catch (e) {
@@ -677,7 +810,7 @@
   }
 
   // ============================================================
-  // 表单
+  // 表单操作
   // ============================================================
   function resetForm() {
     editingId = null;
@@ -704,11 +837,10 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 检查歌名是否重复（编辑时排除自己）
   function isDuplicateTitle(title) {
     const normalized = title.trim().toLowerCase();
     return songs.some(s => {
-      if (editingId && s.id === editingId) return false; // 编辑时排除自己
+      if (editingId && s.id === editingId) return false;
       return s.title.trim().toLowerCase() === normalized;
     });
   }
@@ -721,7 +853,6 @@
       return;
     }
 
-    // ⭐ 检查歌名是否重复
     if (isDuplicateTitle(title)) {
       titleInput.classList.add('duplicate');
       showToast(`⚠️ 《${title}》已经存在，不能重复添加`);
@@ -748,7 +879,6 @@
     }
   }
 
-  // 输入时实时检查重复
   titleInput.addEventListener('input', () => {
     const title = titleInput.value.trim();
     if (title && isDuplicateTitle(title)) {
@@ -796,10 +926,10 @@
       pill.removeEventListener('blur', onBlur);
       pill.removeEventListener('keydown', onKey);
       pill.setAttribute('contenteditable', 'false');
-      const newName = pill.textContent.trim();
+      const newName = pill.innerText.trim();
 
       if (!save || newName === '' || newName === oldName) {
-        pill.textContent = oldName;
+        render();
         return;
       }
 
@@ -836,6 +966,7 @@
       formPanel.classList.remove('show');
       resetForm();
     }
+    renderTagFilter();
     render();
   }
 
@@ -852,10 +983,8 @@
       loginModal.classList.remove('show');
       tokenInput.value = '';
       songs = latestSongs;
+      updateQuickPanels();
       setAdminUI(true);
-      renderTagFilter();
-      render();
-      updateCategoryDatalist();
       showToast(`🔓 已进入管理模式（${songs.length} 首）`);
     } catch (e) {
       token = '';
@@ -864,13 +993,11 @@
     }
   }
 
-  // ⭐ 退出只切视图，保留 Token（下次点管理免输）
   function logout() {
     setAdminUI(false);
     showToast('👋 已切到访客视角（Token 已记住）');
   }
 
-  // ⭐ 点管理时，先试本地 Token；有且有效就免输，否则弹框
   async function openLogin() {
     const savedToken = localStorage.getItem(TOKEN_KEY);
     if (savedToken && isConfigured()) {
@@ -879,14 +1006,11 @@
         token = savedToken;
         const latestSongs = await fetchGist();
         songs = latestSongs;
+        updateQuickPanels();
         setAdminUI(true);
-        renderTagFilter();
-        render();
-        updateCategoryDatalist();
         showToast(`🔓 欢迎回来（${songs.length} 首）`);
         return;
       } catch (e) {
-        // Token 失效 → 清掉，弹登录框
         console.warn('保存的 Token 已失效', e);
         token = '';
         localStorage.removeItem(TOKEN_KEY);
@@ -914,9 +1038,9 @@
 
     try {
       songs = await fetchGist();
+      updateQuickPanels();
       renderTagFilter();
       render();
-      updateCategoryDatalist();
     } catch (e) {
       console.error(e);
       categoriesGrid.innerHTML = `
@@ -928,18 +1052,45 @@
   }
 
   // ============================================================
-  // 事件
+  // 事件绑定
   // ============================================================
   function bindEvents() {
+    // 搜索
     searchInput.addEventListener('input', () => {
       currentSearch = searchInput.value;
       render();
     });
     randomBtn.addEventListener('click', randomCopy);
 
-    tagFilterRow.addEventListener('click', e => {
+    // 标签筛选栏
+    tagFilterRow.addEventListener('click', async e => {
+      // 点击“编辑标签/完成编辑”按钮
+      if (e.target.closest('#editTagsBtn')) {
+        isEditingTags = !isEditingTags;
+        renderTagFilter();
+        return;
+      }
+
+      // 点击小对勾保存修改
+      const saveBtn = e.target.closest('.tag-save-btn');
+      if (saveBtn) {
+        const oldTag = saveBtn.dataset.old;
+        const wrapper = saveBtn.closest('.tag-edit-wrapper');
+        const input = wrapper.querySelector('.tag-edit-input');
+        const newTag = input.value.trim();
+        
+        if (!newTag) { showToast('⚠️ 标签不能为空'); return; }
+        const ok = await saveSingleTag(oldTag, newTag);
+        if (ok) {
+          isEditingTags = false;
+          renderTagFilter();
+        }
+        return;
+      }
+
+      // 点击正常的标签药丸进行筛选
       const btn = e.target.closest('.tag-filter');
-      if (!btn) return;
+      if (!btn || btn.classList.contains('edit-tag-btn')) return;
       const tag = btn.dataset.tag;
       if (selectedTags.has(tag)) selectedTags.delete(tag);
       else selectedTags.add(tag);
@@ -947,6 +1098,17 @@
       render();
     });
 
+    // 标签编辑框内按回车保存
+    tagFilterRow.addEventListener('keydown', e => {
+      if (e.target.classList.contains('tag-edit-input') && e.key === 'Enter') {
+        e.preventDefault();
+        const wrapper = e.target.closest('.tag-edit-wrapper');
+        const saveBtn = wrapper.querySelector('.tag-save-btn');
+        if (saveBtn) saveBtn.click();
+      }
+    });
+
+    // 表单保存
     saveBtn.addEventListener('click', saveForm);
     cancelBtn.addEventListener('click', resetForm);
     [titleInput, tagsInput, categoryInput].forEach(inp => {
@@ -955,16 +1117,17 @@
       });
     });
 
+    // 管理入口
     adminToggleBtn.addEventListener('click', () => {
       if (isAdmin) logout();
       else openLogin();
     });
 
-    // 管理模式下，右键"退出"按钮 → 彻底清除 Token
+    // 右键彻底登出
     adminToggleBtn.addEventListener('contextmenu', (e) => {
       if (isAdmin) {
         e.preventDefault();
-        if (confirm('彻底登出？将清除本地保存的 Token，下次需要重新输入。\n（平时点左键退出即可保留 Token）')) {
+        if (confirm('彻底登出？将清除本地保存的 Token，下次需要重新输入。')) {
           token = '';
           localStorage.removeItem(TOKEN_KEY);
           setAdminUI(false);
@@ -973,6 +1136,7 @@
       }
     });
 
+    // 登录框事件
     loginOkBtn.addEventListener('click', login);
     loginCancelBtn.addEventListener('click', () => {
       loginModal.classList.remove('show');
@@ -981,15 +1145,53 @@
     tokenInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); login(); }
     });
-    loginModal.addEventListener('click', e => {
-      if (e.target === loginModal) {
-        loginModal.classList.remove('show');
-        tokenInput.value = '';
+
+    // 快捷选择面板
+    categoryDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = categoryQuickPanel.classList.contains('show');
+      document.querySelectorAll('.quick-panel').forEach(p => p.classList.remove('show'));
+      if (!isShowing) categoryQuickPanel.classList.add('show');
+    });
+    tagsDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isShowing = tagsQuickPanel.classList.contains('show');
+      document.querySelectorAll('.quick-panel').forEach(p => p.classList.remove('show'));
+      if (!isShowing) tagsQuickPanel.classList.add('show');
+    });
+    
+    categoryQuickPanel.addEventListener('click', e => {
+      if (e.target.classList.contains('quick-item')) {
+        categoryInput.value = e.target.dataset.val;
+        categoryQuickPanel.classList.remove('show');
+      }
+    });
+    
+    tagsQuickPanel.addEventListener('click', e => {
+      if (e.target.classList.contains('quick-item')) {
+        const current = tagsInput.value.trim();
+        const newVal = e.target.dataset.val;
+        if (current) {
+          const arr = current.split(',').map(s => s.trim()).filter(Boolean);
+          if (!arr.includes(newVal)) {
+            tagsInput.value = [...arr, newVal].join(', ') + ', ';
+          }
+        } else {
+          tagsInput.value = newVal + ', ';
+        }
+        tagsQuickPanel.classList.remove('show');
+        tagsInput.focus();
       }
     });
 
-    // 表格事件委托
+    // 点击其他区域关闭快捷面板
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.quick-panel').forEach(p => p.classList.remove('show'));
+    });
+
+    // 分类区域点击委托
     categoriesGrid.addEventListener('click', e => {
+      // 编辑分类名
       const pill = e.target.closest('.category-name-pill');
       if (pill && !pill.classList.contains('uncategorized') && !e.target.closest('.category-actions')) {
         e.stopPropagation();
@@ -997,6 +1199,7 @@
         return;
       }
 
+      // 在指定分类下添加
       const addToCat = e.target.closest('.add-to-cat');
       if (addToCat) {
         e.stopPropagation();
@@ -1008,13 +1211,20 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
+      
+      // 删除整个分类
       const delCat = e.target.closest('.delete-cat');
       if (delCat) { e.stopPropagation(); deleteCategory(delCat.dataset.category); return; }
+      
+      // 编辑单曲
       const editBtn = e.target.closest('.icon-btn.edit');
       if (editBtn) { e.stopPropagation(); openEditForm(editBtn.dataset.id); return; }
+      
+      // 删除单曲
       const delBtn = e.target.closest('.icon-btn.delete');
       if (delBtn) { e.stopPropagation(); deleteSong(delBtn.dataset.id); return; }
 
+      // 点击行复制歌名
       const item = e.target.closest('.song-item');
       if (item) {
         const t = item.dataset.title;
@@ -1033,19 +1243,15 @@
   async function init() {
     bindEvents();
 
-    // 有保存的 Token → 自动进入管理模式
     const savedToken = localStorage.getItem(TOKEN_KEY);
     if (savedToken && isConfigured()) {
       token = savedToken;
       try {
         songs = await fetchGist();
+        updateQuickPanels();
         setAdminUI(true);
-        renderTagFilter();
-        render();
-        updateCategoryDatalist();
         return;
       } catch (e) {
-        // Token 失效，清理
         token = '';
         localStorage.removeItem(TOKEN_KEY);
       }
