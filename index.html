@@ -66,6 +66,7 @@
     display: none;
   }
   .form-panel.show { display: block; }
+  .form-panel.show { position: relative; z-index: 20; }
   .form-panel h2 {
     font-size: 0.82rem; color: #4a6a94; margin-bottom: 0.6rem;
     font-weight: 700; display: flex; align-items: center; gap: 0.4rem;
@@ -118,7 +119,7 @@
     position: absolute; top: 100%; left: 0; right: 0;
     background: #fff; border: 1px solid #cdd9ea; border-radius: 8px;
     box-shadow: 0 10px 25px rgba(59,85,120,0.15);
-    z-index: 100; max-height: 200px; overflow-y: auto;
+    z-index: 30; max-height: 200px; overflow-y: auto;
     margin-top: 4px; display: none; flex-wrap: wrap; gap: 4px; padding: 6px;
   }
   .quick-panel.show { display: flex; }
@@ -405,6 +406,7 @@
     --theme-primary-mid: #c58aa3;
     --theme-primary-soft: #f2e3e9;
     --theme-primary-tint: #f7ebf0;
+    --theme-primary-selected: #f0dce5;
     --theme-neutral: #e9dce2;
     --theme-border: #dfcbd4;
     --theme-border-soft: #e8dce2;
@@ -429,6 +431,7 @@
     --theme-primary-mid: #939daa;
     --theme-primary-soft: #e7eaed;
     --theme-primary-tint: #f0f1f2;
+    --theme-primary-selected: #e1e4e7;
     --theme-neutral: #dce0e4;
     --theme-border: #cbd1d7;
     --theme-border-soft: #d9dde1;
@@ -453,6 +456,7 @@
     --theme-primary-mid: #7c9bc9;
     --theme-primary-soft: #e8eff9;
     --theme-primary-tint: #eef2f9;
+    --theme-primary-selected: #dce7f5;
     --theme-neutral: #dde6f2;
     --theme-border: #cdd9ea;
     --theme-border-soft: #dde6f2;
@@ -538,7 +542,10 @@
   }
   body[data-theme] .tag-filter { color: var(--theme-primary); border-color: var(--theme-border); }
   body[data-theme] .tag-filter:hover { background: var(--theme-primary-soft); border-color: var(--theme-primary-light); }
-  body[data-theme] .tag-filter.active { background: var(--theme-primary); border-color: var(--theme-primary); }
+  body[data-theme] .tag-filter.active {
+    background: var(--theme-primary-selected); color: var(--theme-secondary-text);
+    border-color: var(--theme-primary-light); box-shadow: 0 2px 7px var(--theme-shadow);
+  }
   body[data-theme] .edit-tag-btn { background: var(--theme-primary-tint); color: var(--theme-secondary-text); border-color: var(--theme-border); }
   body[data-theme] .edit-tag-btn:hover { background: var(--theme-primary-soft); border-color: var(--theme-primary-light); }
   body[data-theme] .edit-tag-btn.editing { background: var(--theme-primary); color: #fff; border-color: var(--theme-primary); }
@@ -572,6 +579,72 @@
   body[data-theme] .toast {
     background: var(--theme-heading); color: #fff;
     box-shadow: 0 8px 24px var(--theme-shadow-strong);
+  }
+  body[data-theme],
+  body[data-theme] .topbar h1,
+  body[data-theme] .topbar-avatar,
+  body[data-theme] .mode-badge,
+  body[data-theme] .stats,
+  body[data-theme] .theme-toggle,
+  body[data-theme] .btn-secondary,
+  body[data-theme] .form-panel,
+  body[data-theme] .form-group input,
+  body[data-theme] .dropdown-btn,
+  body[data-theme] .quick-panel,
+  body[data-theme] .quick-item,
+  body[data-theme] .search-box,
+  body[data-theme] .random-btn,
+  body[data-theme] .tag-filter,
+  body[data-theme] .tag-edit-input,
+  body[data-theme] .tag-save-btn,
+  body[data-theme] .category-card,
+  body[data-theme] .category-name-pill,
+  body[data-theme] .category-count,
+  body[data-theme] .song-item,
+  body[data-theme] .tag-pill,
+  body[data-theme] .modal,
+  body[data-theme] .modal input,
+  body[data-theme] .toast {
+    transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+  body[data-theme] .form-panel.show { animation: panel-enter 180ms ease-out both; }
+  body[data-theme] .quick-panel.show { animation: panel-enter 150ms ease-out both; }
+  body[data-theme] .modal-mask.show { animation: fade-in 160ms ease-out both; }
+  body[data-theme] .modal-mask.show .modal { animation: modal-enter 180ms ease-out both; }
+  body[data-theme] .category-card { transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 160ms ease; }
+  body[data-theme] .categories-container.filter-transition > .category-card,
+  body[data-theme] .categories-container.filter-transition > .empty-message {
+    animation: filter-enter 200ms ease-out both;
+  }
+  body[data-theme] .category-card:hover { transform: translateY(-1px); }
+  body[data-theme] .song-item { transition: background-color 140ms ease, transform 140ms ease; }
+  body[data-theme] .song-item:hover { transform: translateX(2px); }
+  body[data-theme] .theme-toggle,
+  body[data-theme] .btn,
+  body[data-theme] .random-btn,
+  body[data-theme] .tag-filter,
+  body[data-theme] .icon-btn { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 140ms ease; }
+  body[data-theme] .theme-toggle:active,
+  body[data-theme] .btn:active,
+  body[data-theme] .random-btn:active,
+  body[data-theme] .tag-filter:active,
+  body[data-theme] .icon-btn:active { transform: scale(0.97); }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes filter-enter {
+    from { opacity: 0.88; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes panel-enter { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes modal-enter { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    body[data-theme] *,
+    body[data-theme] *::before,
+    body[data-theme] *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 </style>
 </head>
@@ -681,6 +754,7 @@
   let editingId = null;
   let token = '';
   let isEditingTags = false;
+  let filterTransitionTimer = 0;
 
   // ---------- DOM ----------
   const $ = id => document.getElementById(id);
@@ -869,7 +943,7 @@
   // ============================================================
   // 渲染分类与歌曲
   // ============================================================
-  function render() {
+  function render(animateFilter = false) {
     const filtered = filterSongs(currentSearch);
 
     if (filtered.length === 0) {
@@ -879,6 +953,7 @@
           ${songs.length === 0 ? '还没有歌曲' : '没有找到匹配的歌曲'}
         </div>
       `;
+      if (animateFilter) animateFilteredResults();
       updateStats();
       return;
     }
@@ -925,7 +1000,18 @@
     });
 
     categoriesGrid.innerHTML = html;
+    if (animateFilter) animateFilteredResults();
     updateStats();
+  }
+
+  function animateFilteredResults() {
+    clearTimeout(filterTransitionTimer);
+    categoriesGrid.classList.remove('filter-transition');
+    void categoriesGrid.offsetWidth;
+    categoriesGrid.classList.add('filter-transition');
+    filterTransitionTimer = setTimeout(() => {
+      categoriesGrid.classList.remove('filter-transition');
+    }, 220);
   }
 
   function renderItem(song, num) {
@@ -1296,7 +1382,7 @@
       if (selectedTags.has(tag)) selectedTags.delete(tag);
       else selectedTags.add(tag);
       renderTagFilter();
-      render();
+      render(true);
     });
 
     // 标签编辑框内按回车保存
