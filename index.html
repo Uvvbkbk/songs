@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>歌える曲リスト</title>
 <style>
+  html { scrollbar-gutter: stable; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -12,7 +13,8 @@
     color: #2d3e5c; font-size: 14px;
     -webkit-font-smoothing: antialiased;
   }
-  .app { max-width: 1500px; margin: 0 auto; }
+
+  .app { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; }
 
   /* ============ 顶栏 ============ */
   .topbar {
@@ -228,6 +230,7 @@
   }
 
   .category-card {
+    position: relative;
     background: #ffffff; border-radius: 16px;
     padding: 1.1rem 1.3rem 0.9rem 1.3rem;
     box-shadow: 0 2px 0 #d9e3f0, 0 4px 12px rgba(108,143,199,0.07);
@@ -236,19 +239,70 @@
     display: inline-block; width: 100%;
     margin-bottom: 1.1rem;
   }
+  .sakura-layer {
+    position: fixed; inset: 0; z-index: 900; overflow: hidden;
+    pointer-events: none; perspective: 900px;
+    color: var(--theme-primary-light);
+  }
+  .sakura-petal {
+    position: absolute; top: -12%; left: var(--petal-left); width: 12px; height: 22px;
+    opacity: 0.68;
+    animation: sakura-fall var(--sakura-duration, 17s) linear var(--fall-delay, 0s) infinite;
+  }
+  .sakura-petal-drift {
+    display: block; width: 100%; height: 100%;
+    animation: sakura-sway var(--sway-duration) ease-in-out var(--sway-delay) infinite;
+  }
+  .sakura-petal-rotation {
+    display: block; position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    animation: sakura-tumble var(--tumble-duration, 4.8s) linear var(--tumble-delay, 0s) infinite;
+  }
+  .sakura-petal-rotation > svg,
+  .sakura-petal-rotation .petal-back svg {
+    position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+    backface-visibility: hidden; overflow: visible;
+  }
+  .sakura-petal-rotation .petal-back {
+    position: absolute; inset: 0; transform: rotateY(180deg);
+    backface-visibility: hidden;
+  }
+  @keyframes sakura-fall {
+    from { top: -12%; }
+    to { top: 112%; }
+  }
+  @keyframes sakura-sway {
+    0% { transform: translateX(0); }
+    19% { transform: translateX(var(--sway-a)); }
+    43% { transform: translateX(var(--sway-b)); }
+    68% { transform: translateX(var(--sway-c)); }
+    86% { transform: translateX(var(--sway-d)); }
+    100% { transform: translateX(0); }
+  }
+  @keyframes sakura-tumble {
+    0% { transform: rotateY(0deg) rotateZ(-20deg); }
+    25% { transform: rotateY(90deg) rotateZ(10deg); }
+    50% { transform: rotateY(180deg) rotateZ(20deg); }
+    75% { transform: rotateY(270deg) rotateZ(-10deg); }
+    100% { transform: rotateY(360deg) rotateZ(-20deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sakura-layer { display: none; }
+  }
   
   /* 分类标题：居中完美对齐 */
   .category-header {
     display: flex; align-items: center; gap: 0.5rem;
     margin-bottom: 0.9rem; flex-wrap: wrap;
   }
+  .category-card.collapsed .category-header { margin-bottom: 0; }
   .category-name-pill {
     display: inline-flex; align-items: center;
     background: #8ba9d4; color: #ffffff;
-    padding: 0 1.2rem 0 0;
+    padding: 0;
     border-radius: 30px; font-size: 1.05rem; font-weight: 700;
     letter-spacing: 0.5px;
-    cursor: pointer; transition: background 0.15s;
+    transition: background 0.15s;
     box-shadow: 0 3px 8px rgba(108,143,199,0.25);
     max-width: 100%; word-break: break-word;
     min-height: 36px;
@@ -258,14 +312,35 @@
     background: #5a7db5; border-radius: 2px;
     margin-left: 10px; margin-right: 10px; flex-shrink: 0;
   }
-  .category-name-pill span { padding-top: 0; }
+  button.category-name-pill {
+    color: #ffffff; cursor: pointer; font-family: inherit;
+    font-size: 1.05rem; font-weight: 700;
+  }
   .category-name-pill:hover { background: #7c9bc9; }
-  .category-name-pill.uncategorized { background: #b8c5d8; cursor: default; }
+  .category-name-pill.uncategorized { background: #b8c5d8; cursor: pointer; }
   .category-name-pill.uncategorized::before { background: #9aabc2; }
   .category-name-pill.uncategorized:hover { background: #b8c5d8; }
-  .category-name-pill[contenteditable="true"] {
-    background: #6c8fc7; outline: 2px solid #4a6a94; cursor: text;
+  .category-name-input {
+    flex: 0 1 auto; min-width: 4ch; max-width: calc(100% - 36px); height: 34px;
+    padding: 0; border: 0; outline: 0; background: transparent;
+    color: inherit; font: inherit; font-weight: 700; letter-spacing: inherit;
   }
+  .category-name-input:focus { text-decoration: underline; text-decoration-thickness: 1px; }
+  .category-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 36px; width: 36px; height: 36px; padding: 0;
+    border: 0; border-radius: 50%; background: transparent;
+    color: inherit; cursor: pointer; transition: background 0.15s;
+  }
+  .category-toggle:hover { background: rgba(255,255,255,0.24); }
+  .category-toggle svg { width: 16px; height: 16px; transition: transform 160ms ease; }
+  .category-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .category-name-pill > .category-toggle { margin-left: 2px; }
+  .category-toggle.category-name-pill {
+    flex: 0 1 auto; width: auto; height: auto; gap: 0.15rem;
+    padding-right: 0.35rem; border-radius: 30px; text-align: left;
+  }
+  .category-toggle.category-name-pill > svg { flex: 0 0 16px; }
 
   .category-count {
     font-size: 0.72rem; color: #9aabc2; font-weight: 600;
@@ -474,6 +549,23 @@
   body[data-theme] {
     background: var(--theme-page);
     color: var(--theme-text);
+    scrollbar-color: var(--theme-primary-light) transparent;
+    scrollbar-width: thin;
+  }
+  body[data-theme]::-webkit-scrollbar {
+    width: 10px;
+  }
+  body[data-theme]::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  body[data-theme]::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 8px;
+    background-color: var(--theme-primary-light);
+    background-clip: content-box;
+  }
+  body[data-theme]::-webkit-scrollbar-thumb:hover {
+    background-color: var(--theme-primary);
   }
   body[data-theme] .topbar h1,
   body[data-theme] .modal h3 { color: var(--theme-heading); }
@@ -486,6 +578,10 @@
     outline-offset: 4px;
   }
   body[data-theme] .stats { background: var(--theme-neutral); color: var(--theme-secondary-text); }
+  body[data-theme] .mode-badge {
+    background: var(--theme-primary-tint); color: var(--theme-secondary-text);
+    border: 1px solid var(--theme-border);
+  }
   body[data-theme] .theme-toggle {
     display: inline-flex; align-items: center; gap: 0.4rem;
     height: 28px; padding: 0 0.75rem; border: 1px solid var(--theme-border);
@@ -559,7 +655,7 @@
   body[data-theme] .category-name-pill { background: var(--theme-primary-light); box-shadow: 0 3px 8px var(--theme-shadow); }
   body[data-theme] .category-name-pill::before { background: var(--theme-primary-dark); }
   body[data-theme] .category-name-pill:hover { background: var(--theme-primary-mid); }
-  body[data-theme] .category-name-pill[contenteditable="true"] { background: var(--theme-primary); outline-color: var(--theme-secondary-text); }
+  body[data-theme] .category-name-input { color: inherit; }
   body[data-theme] .category-count { color: var(--theme-muted); background: var(--theme-primary-tint); }
   body[data-theme] .icon-btn { color: var(--theme-placeholder); }
   body[data-theme] .icon-btn:hover { color: var(--theme-secondary-text); background: var(--theme-primary-soft); }
@@ -649,6 +745,7 @@
 </style>
 </head>
 <body>
+<div class="sakura-layer" id="sakuraBackground" aria-hidden="true"></div>
 <div class="app">
   <div class="topbar">
     <h1><img class="topbar-avatar" src="data:image/jpeg;base64,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" alt="头像">我会的歌</h1>
@@ -751,6 +848,7 @@
   let isAdmin = false;
   let currentSearch = '';
   let selectedTags = new Set();
+  const collapsedCategories = new Set();
   let editingId = null;
   let token = '';
   let isEditingTags = false;
@@ -852,7 +950,9 @@
   }
   function escapeHtml(t) {
     if (!t) return '';
-    const d = document.createElement('div'); d.textContent = t; return d.innerHTML;
+    const d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
   function filterSongs(kw) {
     let list = songs;
@@ -972,27 +1072,42 @@
     });
 
     let html = '';
-    sortedCats.forEach(cat => {
+    sortedCats.forEach((cat, index) => {
       const list = groups.get(cat);
       const isUncat = cat === UNCATEGORIZED;
+      const isCollapsed = collapsedCategories.has(cat);
+      const listId = `song-list-${index}`;
       const catActions = isAdmin ? `
         <div class="category-actions">
           <button class="icon-btn add-to-cat" data-category="${escapeHtml(cat)}" title="在此分类添加">＋</button>
           ${isUncat ? '' : `<button class="icon-btn delete-cat" data-category="${escapeHtml(cat)}" title="删除整个分类">🗑</button>`}
         </div>` : '';
 
+      const categoryControl = isAdmin && !isUncat
+        ? `<div class="category-name-pill" data-category="${escapeHtml(cat)}">
+             <input class="category-name-input" type="text" style="width:${measureCategoryName(cat)}px"
+                    value="${escapeHtml(cat)}"
+                    aria-label="编辑分类名「${escapeHtml(cat)}」" data-original="${escapeHtml(cat)}">
+             ${renderCategoryToggle(cat, listId, isCollapsed)}
+           </div>`
+        : `<button class="category-name-pill category-toggle${isUncat ? ' uncategorized' : ''}" type="button"
+                  data-category="${escapeHtml(cat)}" aria-expanded="${!isCollapsed}"
+                  aria-controls="${listId}" aria-label="${isCollapsed ? '展开' : '折叠'}「${escapeHtml(cat)}」歌单"
+                  title="${isCollapsed ? '展开歌单' : '折叠歌单'}">
+             <span>${escapeHtml(cat)}</span>
+             <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+               <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>
+           </button>`;
+
       html += `
-        <div class="category-card" data-category="${escapeHtml(cat)}">
+        <div class="category-card${isCollapsed ? ' collapsed' : ''}" data-category="${escapeHtml(cat)}">
           <div class="category-header">
-            <span class="category-name-pill ${isUncat ? 'uncategorized' : ''}"
-                  data-category="${escapeHtml(cat)}"
-                  ${isUncat || !isAdmin ? '' : 'title="点击编辑分类名"'}>
-              <span>${escapeHtml(cat)}</span>
-            </span>
+            ${categoryControl}
             <span class="category-count">${list.length}</span>
             ${catActions}
           </div>
-          <ul class="song-list">
+          <ul class="song-list" id="${listId}"${isCollapsed ? ' hidden' : ''}>
             ${list.map((s, i) => renderItem(s, i + 1)).join('')}
           </ul>
         </div>
@@ -1004,6 +1119,71 @@
     updateStats();
   }
 
+  function renderSakuraPetals() {
+    const petalArtwork = fill => `<svg viewBox="0 0 24 44" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <path d="M12 42C8.4 37 3.1 29.5 2.6 20.2 2.1 12 4.8 5.4 9.2 4.8c1.5-.2 2.5 1.7 2.8 4.3.5-2.7 1.5-4.4 3.1-4.2 4.5.2 6.9 6.8 6.3 15.3C20.8 29.5 15.7 37 12 42Z" fill="${fill}" stroke="var(--theme-primary)" stroke-opacity=".4" stroke-width=".65" stroke-linejoin="round"/>
+      <path d="M12 39C11.2 31 11.3 19 12 9.2M11.6 30.5 6.1 22M11.8 25.1l6-8.3M11.6 34l-3.2-4.9" fill="none" stroke="var(--theme-primary)" stroke-opacity=".35" stroke-width=".6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6.4 11.2c.8-2.5 2-3.6 3.4-3.8" fill="none" stroke="#fff" stroke-opacity=".48" stroke-width=".8" stroke-linecap="round"/>
+    </svg>`;
+    const front = petalArtwork('currentColor');
+    const back = petalArtwork('var(--theme-primary-light)');
+    const randomBetween = (min, max) => min + Math.random() * (max - min);
+    const petalCount = 16;
+    const fallDuration = window.innerHeight * 1.24 / 28;
+    const renderPetal = index => {
+      const offsets = Array.from({ length: 4 }, () => Math.round(randomBetween(-56, 56)));
+      const duration = randomBetween(3.6, 7.2).toFixed(2);
+      const delay = (-randomBetween(0, Number(duration))).toFixed(2);
+      const tumbleDuration = randomBetween(3.4, 6.4).toFixed(2);
+      const tumbleDelay = (-randomBetween(0, Number(tumbleDuration))).toFixed(2);
+      const fallPhase = (fallDuration * index / petalCount + randomBetween(0, 0.45)) % fallDuration;
+      const style = [
+        `--petal-left:${randomBetween(0, 100).toFixed(2)}%`,
+        `--sway-a:${offsets[0]}px`,
+        `--sway-b:${offsets[1]}px`,
+        `--sway-c:${offsets[2]}px`,
+        `--sway-d:${offsets[3]}px`,
+        `--sway-duration:${duration}s`,
+        `--sway-delay:${delay}s`,
+        `--tumble-duration:${tumbleDuration}s`,
+        `--tumble-delay:${tumbleDelay}s`,
+        `--fall-delay:${(-fallPhase).toFixed(2)}s`,
+      ].join(';');
+      return `<span class="sakura-petal" style="${style}"><span class="sakura-petal-drift"><span class="sakura-petal-rotation">${front}<span class="petal-back">${back}</span></span></span></span>`;
+    };
+    return Array.from({ length: petalCount }, (_, index) => renderPetal(index)).join('');
+  }
+
+  function initSakuraBackground() {
+    const background = $('sakuraBackground');
+    const setFallDuration = () => {
+      background.style.setProperty('--sakura-duration', `${window.innerHeight * 1.24 / 28}s`);
+    };
+    setFallDuration();
+    background.innerHTML = renderSakuraPetals();
+    window.addEventListener('resize', setFallDuration);
+  }
+
+  function renderCategoryToggle(category, listId, isCollapsed) {
+    return `<button class="category-toggle" type="button"
+                    data-category="${escapeHtml(category)}"
+                    aria-expanded="${!isCollapsed}" aria-controls="${listId}"
+                    aria-label="${isCollapsed ? '展开' : '折叠'}「${escapeHtml(category)}」歌单"
+                    title="${isCollapsed ? '展开歌单' : '折叠歌单'}">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>`;
+  }
+
+  function measureCategoryName(name) {
+    const context = document.createElement('canvas').getContext('2d');
+    if (!context) return Math.ceil(name.length * 18);
+    const fontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.05;
+    context.font = `700 ${fontSize}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+    return Math.ceil(context.measureText(name).width + name.length * 0.5 + 4);
+  }
+
   function animateFilteredResults() {
     clearTimeout(filterTransitionTimer);
     categoriesGrid.classList.remove('filter-transition');
@@ -1012,6 +1192,38 @@
     filterTransitionTimer = setTimeout(() => {
       categoriesGrid.classList.remove('filter-transition');
     }, 220);
+  }
+
+  const categoryListAnimations = new WeakMap();
+  function animateCategoryList(list, expand) {
+    const currentHeight = list.getBoundingClientRect().height;
+    const previousAnimation = categoryListAnimations.get(list);
+    if (previousAnimation) {
+      categoryListAnimations.delete(list);
+      previousAnimation.cancel();
+    }
+
+    list.hidden = false;
+    list.style.height = `${currentHeight}px`;
+    list.style.overflow = 'hidden';
+    const targetHeight = expand ? list.scrollHeight : 0;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duration = reduceMotion ? 0 : 280;
+    const animation = list.animate(
+      [{ height: `${currentHeight}px` }, { height: `${targetHeight}px` }],
+      { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+    );
+    categoryListAnimations.set(list, animation);
+
+    const finish = () => {
+      if (categoryListAnimations.get(list) !== animation) return;
+      list.hidden = !expand;
+      list.style.height = '';
+      list.style.overflow = '';
+      categoryListAnimations.delete(list);
+    };
+    animation.onfinish = finish;
+    animation.oncancel = finish;
   }
 
   function renderItem(song, num) {
@@ -1194,44 +1406,30 @@
     await saveToGist(newSongs, `🗑️ 已删除分类「${cat}」`);
   }
 
-  function startEditCategoryName(pill) {
-    if (!isAdmin) return;
-    const oldName = pill.dataset.category;
-    if (oldName === UNCATEGORIZED) return;
-    if (pill.getAttribute('contenteditable') === 'true') return;
+  async function saveCategoryName(input) {
+    if (!isAdmin || !input.isConnected) return;
+    const oldName = input.dataset.original;
+    const newName = input.value.trim();
+    if (!newName || newName === oldName) {
+      input.value = oldName;
+      return;
+    }
 
-    pill.setAttribute('contenteditable', 'true');
-    pill.focus();
-    const range = document.createRange();
-    range.selectNodeContents(pill);
-    const sel = window.getSelection();
-    sel.removeAllRanges(); sel.addRange(range);
-
-    const finish = async (save) => {
-      pill.removeEventListener('blur', onBlur);
-      pill.removeEventListener('keydown', onKey);
-      pill.setAttribute('contenteditable', 'false');
-      const newName = pill.innerText.trim();
-
-      if (!save || newName === '' || newName === oldName) {
-        render();
-        return;
-      }
-
-      const newSongs = songs.map(s => {
-        const c = (s.category && s.category.trim()) ? s.category.trim() : UNCATEGORIZED;
-        return c === oldName ? { ...s, category: newName } : s;
-      });
-      await saveToGist(newSongs, `✏️ 分类已改为「${newName}」`);
-    };
-
-    const onBlur = () => finish(true);
-    const onKey = e => {
-      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
-      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
-    };
-    pill.addEventListener('blur', onBlur);
-    pill.addEventListener('keydown', onKey);
+    const newSongs = songs.map(song => {
+      const category = (song.category && song.category.trim()) ? song.category.trim() : UNCATEGORIZED;
+      return category === oldName ? { ...song, category: newName } : song;
+    });
+    const wasCollapsed = collapsedCategories.has(oldName);
+    const targetWasCollapsed = collapsedCategories.has(newName);
+    collapsedCategories.delete(oldName);
+    if (wasCollapsed || targetWasCollapsed) collapsedCategories.add(newName);
+    const ok = await saveToGist(newSongs, `✏️ 分类已改为「${newName}」`);
+    if (!ok) {
+      collapsedCategories.delete(newName);
+      if (wasCollapsed) collapsedCategories.add(oldName);
+      if (targetWasCollapsed) collapsedCategories.add(newName);
+      if (input.isConnected) input.value = oldName;
+    }
   }
 
   // ============================================================
@@ -1493,11 +1691,20 @@
 
     // 分类区域点击委托
     categoriesGrid.addEventListener('click', e => {
-      // 编辑分类名
-      const pill = e.target.closest('.category-name-pill');
-      if (pill && !pill.classList.contains('uncategorized') && !e.target.closest('.category-actions')) {
-        e.stopPropagation();
-        startEditCategoryName(pill);
+      // 折叠或展开分类歌单
+      const toggle = e.target.closest('.category-toggle');
+      if (toggle) {
+        const category = toggle.dataset.category;
+        const isCollapsed = collapsedCategories.has(category);
+        const card = toggle.closest('.category-card');
+        const list = card.querySelector('.song-list');
+        if (isCollapsed) collapsedCategories.delete(category);
+        else collapsedCategories.add(category);
+        animateCategoryList(list, isCollapsed);
+        card.classList.toggle('collapsed', !isCollapsed);
+        toggle.setAttribute('aria-expanded', String(isCollapsed));
+        toggle.setAttribute('aria-label', `${isCollapsed ? '折叠' : '展开'}「${category}」歌单`);
+        toggle.title = isCollapsed ? '折叠歌单' : '展开歌单';
         return;
       }
 
@@ -1534,6 +1741,23 @@
       }
     });
 
+    categoriesGrid.addEventListener('focusout', e => {
+      if (e.target.matches('.category-name-input')) {
+        setTimeout(() => saveCategoryName(e.target), 0);
+      }
+    });
+    categoriesGrid.addEventListener('keydown', e => {
+      if (!e.target.matches('.category-name-input')) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.target.blur();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.target.value = e.target.dataset.original;
+        e.target.blur();
+      }
+    });
+
     categoriesGrid.addEventListener('mousedown', e => {
       if (e.target.closest('.icon-btn, .category-name-pill')) e.stopPropagation();
     });
@@ -1543,6 +1767,7 @@
   // 启动
   // ============================================================
   async function init() {
+    initSakuraBackground();
     bindEvents();
 
     const savedToken = localStorage.getItem(TOKEN_KEY);
