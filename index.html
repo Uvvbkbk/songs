@@ -172,13 +172,35 @@
     font-family: inherit; white-space: nowrap;
   }
   .random-btn:hover { transform: translateY(-1px); }
+  .go-fab {
+    position: fixed; right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)); z-index: 950;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; padding: 0; border: none; border-radius: 50%;
+    background: linear-gradient(135deg, #8ba9d4, #6c8fc7); color: #fff;
+    font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(108,143,199,0.4);
+    transition: background-color 160ms ease, box-shadow 160ms ease, transform 140ms ease;
+  }
+  .go-fab:hover { transform: translateY(-2px); }
+  .go-fab:focus-visible { outline: 3px solid #4a6a94; outline-offset: 3px; }
+  .go-fab:active { transform: scale(0.96); }
 
   /* ============ 标签筛选 ============ */
   .tag-filter-row {
-    display: flex; flex-wrap: wrap; gap: 0.35rem;
-    margin-bottom: 0.9rem; align-items: center;
+    display: flex; gap: 0.35rem;
+    margin-bottom: 0.9rem; align-items: flex-start;
   }
   .tag-filter-row:empty { display: none; }
+  .tag-filter-items {
+    display: flex; flex: 1 1 auto; flex-wrap: wrap; align-content: flex-start;
+    gap: 0.35rem; min-width: 0; max-height: 1.8rem; overflow: hidden;
+    transition: max-height 220ms ease;
+  }
+  .tag-filter-toggle {
+    flex: 0 0 auto; white-space: nowrap;
+  }
+  .tag-filter-toggle[hidden] { display: none; }
   .tag-filter {
     background: #ffffff; color: #6c8fc7;
     border: 1px solid #cdd9ea;
@@ -596,6 +618,12 @@
     color: var(--theme-secondary-text); font: inherit; font-size: 0.76rem;
     font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap;
   }
+  body[data-theme] .go-fab {
+    background: var(--theme-primary); color: #fff;
+    box-shadow: 0 4px 14px var(--theme-shadow-strong);
+  }
+  body[data-theme] .go-fab:hover { background: var(--theme-primary-dark); }
+  body[data-theme] .go-fab:focus-visible { outline-color: var(--theme-primary-dark); }
   body[data-theme] .theme-swatch {
     width: 11px; height: 11px; border-radius: 50%;
     background: var(--theme-primary);
@@ -726,12 +754,14 @@
   body[data-theme] .btn,
   body[data-theme] .random-btn,
   body[data-theme] .tag-filter,
-  body[data-theme] .icon-btn { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 140ms ease; }
+  body[data-theme] .icon-btn,
+  body[data-theme] .go-fab { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 140ms ease; }
   body[data-theme] .theme-toggle:active,
   body[data-theme] .btn:active,
   body[data-theme] .random-btn:active,
   body[data-theme] .tag-filter:active,
   body[data-theme] .icon-btn:active { transform: scale(0.97); }
+  body[data-theme] .go-fab:active { transform: scale(0.96); }
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
   @keyframes filter-enter {
     from { opacity: 0.88; transform: translateY(5px); }
@@ -740,6 +770,8 @@
   @keyframes panel-enter { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes modal-enter { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
   @media (prefers-reduced-motion: reduce) {
+    .tag-filter-items { transition-duration: 0.01ms !important; }
+    .go-fab { transition-duration: 0.01ms !important; }
     body[data-theme] *,
     body[data-theme] *::before,
     body[data-theme] *::after {
@@ -798,9 +830,9 @@
 
   <div class="search-row">
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="🔍 搜索歌名或标签..." autocomplete="off">
+      <input type="text" id="searchInput" placeholder="🔎（提示：点击歌曲复制歌名，点击Go!!跳转b站搜索卡拉ok版）" autocomplete="off">
     </div>
-    <button class="random-btn" id="randomBtn" title="随机复制一首">🎲 随机</button>
+    <button class="random-btn" id="randomBtn" title="随机复制一首">「随机」</button>
   </div>
 
   <!-- 标签筛选栏 -->
@@ -811,6 +843,9 @@
     <div class="loading"><span class="spinner"></span>正在加载歌单...</div>
   </div>
 </div>
+
+<button class="go-fab" id="goBtn" type="button" title="在哔哩哔哩搜索上次复制的歌名"
+        aria-label="在哔哩哔哩搜索上次复制的歌名">Go!！</button>
 
 <!-- 登录模态框 -->
 <div class="modal-mask" id="loginModal">
@@ -855,6 +890,8 @@
   let isAdmin = false;
   let currentSearch = '';
   let selectedTags = new Set();
+  let lastCopiedTitle = '';
+  let isTagFilterExpanded = false;
   const collapsedCategories = new Set();
   let editingId = null;
   let token = '';
@@ -866,6 +903,7 @@
   const categoriesGrid = $('categoriesGrid');
   const statsDisplay = $('statsDisplay');
   const searchInput = $('searchInput');
+  const goBtn = $('goBtn');
   const randomBtn = $('randomBtn');
   const toastEl = $('toast');
   const formPanel = $('formPanel');
@@ -1002,7 +1040,11 @@
     songs.forEach(s => (s.tags || []).forEach(t => {
       if (t) tagCount.set(t, (tagCount.get(t) || 0) + 1);
     }));
-    if (tagCount.size === 0 && !isEditingTags) { tagFilterRow.innerHTML = ''; return; }
+    if (tagCount.size === 0 && !isEditingTags) {
+      tagFilterRow.innerHTML = '';
+      isTagFilterExpanded = false;
+      return;
+    }
     
     const sorted = [...tagCount.entries()].sort((a, b) => b[1] - a[1]);
     let html = '';
@@ -1034,7 +1076,35 @@
       });
     }
     
-    tagFilterRow.innerHTML = html;
+    tagFilterRow.innerHTML = `
+      <div class="tag-filter-items">${html}</div>
+      <button class="tag-filter tag-filter-toggle" type="button" aria-label="折叠筛选标签"
+              title="折叠筛选标签" aria-expanded="false" hidden>折叠</button>`;
+    updateTagFilterOverflow();
+  }
+
+  function updateTagFilterOverflow() {
+    const items = tagFilterRow.querySelector('.tag-filter-items');
+    const toggle = tagFilterRow.querySelector('.tag-filter-toggle');
+    if (!items || !toggle) return;
+
+    if (isEditingTags) {
+      items.style.maxHeight = 'none';
+      toggle.hidden = true;
+      isTagFilterExpanded = false;
+      return;
+    }
+
+    const collapsedHeight = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.8;
+    const hasOverflow = items.scrollHeight > collapsedHeight + 1;
+    toggle.hidden = !hasOverflow;
+    if (!hasOverflow) isTagFilterExpanded = false;
+    items.style.maxHeight = isTagFilterExpanded ? `${items.scrollHeight}px` : `${collapsedHeight}px`;
+    toggle.setAttribute('aria-expanded', String(isTagFilterExpanded));
+    const label = isTagFilterExpanded ? '收起' : '折叠';
+    toggle.textContent = label;
+    toggle.setAttribute('aria-label', `${label}筛选标签`);
+    toggle.title = `${label}筛选标签`;
   }
 
   async function saveSingleTag(oldTag, newTag) {
@@ -1257,6 +1327,7 @@
   // 复制与随机
   // ============================================================
   function copyTitle(t) {
+    lastCopiedTitle = t;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(t)
         .then(() => showToast(`已复制: ${t.length > 30 ? t.slice(0, 30) + '…' : t}`))
@@ -1291,6 +1362,41 @@
     }
     const pick = pool[Math.floor(Math.random() * pool.length)];
     copyTitle(pick.title);
+  }
+
+  function searchLastCopiedTitle() {
+    if (!lastCopiedTitle) {
+      showToast('请先选一首歌');
+      return;
+    }
+    const query = `${lastCopiedTitle} 卡拉ok`;
+    const encodedQuery = encodeURIComponent(query);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isMobile = isAndroid || isIOS;
+    const fallbackUrl = isMobile
+      ? `https://m.bilibili.com/search?keyword=${encodedQuery}`
+      : `https://search.bilibili.com/all?keyword=${encodedQuery}`;
+    const searchTab = window.open('about:blank', '_blank');
+    if (!searchTab) {
+      showToast('浏览器阻止了新标签页，请允许弹出窗口后重试');
+      return;
+    }
+    searchTab.opener = null;
+
+    if (isAndroid) {
+      searchTab.location.replace(
+        `intent://search?keyword=${encodedQuery}#Intent;scheme=bilibili;package=tv.danmaku.bili;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`
+      );
+    } else if (isIOS) {
+      searchTab.location.replace(`bilibili://search?keyword=${encodedQuery}`);
+      window.setTimeout(() => {
+        if (!searchTab.closed) searchTab.location.replace(fallbackUrl);
+      }, 1500);
+    } else {
+      searchTab.location.replace(fallbackUrl);
+    }
   }
 
   async function saveToGist(newSongs, successMsg) {
@@ -1450,7 +1556,7 @@
       avatarEntry.title = '点击退出管理模式；右键可彻底登出';
       formPanel.classList.add('show');
     } else {
-      modeBadge.textContent = '👀 访客';
+      modeBadge.textContent = '👁️ 访客';
       modeBadge.className = 'mode-badge guest';
       avatarEntry.setAttribute('aria-label', '进入管理模式');
       avatarEntry.title = '点击头像进入管理模式';
@@ -1551,10 +1657,18 @@
       currentSearch = searchInput.value;
       render();
     });
+    goBtn.addEventListener('click', searchLastCopiedTitle);
     randomBtn.addEventListener('click', randomCopy);
 
     // 标签筛选栏
     tagFilterRow.addEventListener('click', async e => {
+      const toggle = e.target.closest('.tag-filter-toggle');
+      if (toggle) {
+        isTagFilterExpanded = !isTagFilterExpanded;
+        updateTagFilterOverflow();
+        return;
+      }
+
       // 点击“编辑标签/完成编辑”按钮
       if (e.target.closest('#editTagsBtn')) {
         isEditingTags = !isEditingTags;
@@ -1588,6 +1702,7 @@
       renderTagFilter();
       render(true);
     });
+    window.addEventListener('resize', updateTagFilterOverflow);
 
     // 标签编辑框内按回车保存
     tagFilterRow.addEventListener('keydown', e => {
@@ -1804,4 +1919,4 @@
 })();
 </script>
 </body>
-</html>1
+</html>
