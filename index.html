@@ -138,6 +138,10 @@
     border-radius: 8px; border: none;
     font-size: 0.82rem; font-weight: 600;
     cursor: pointer; transition: 0.15s; font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .btn-form.btn-secondary {
+    border: 1px solid #cdd9ea;
   }
 
   /* ============ 搜索行 ============ */
@@ -394,9 +398,8 @@
   .no-tag { color: #c5cfde; font-size: 0.7rem; font-style: italic; }
   .song-actions {
     display: flex; gap: 0.1rem; flex-shrink: 0;
-    opacity: 0; transition: opacity 0.15s;
+    opacity: 1;
   }
-  .song-item:hover .song-actions { opacity: 1; }
 
   .empty-message {
     text-align: center;
@@ -577,7 +580,11 @@
     outline: 3px solid var(--theme-primary);
     outline-offset: 4px;
   }
-  body[data-theme] .stats { background: var(--theme-neutral); color: var(--theme-secondary-text); }
+  body[data-theme] .stats {
+    padding: 0.3rem 0.75rem; background: var(--theme-primary-tint);
+    color: var(--theme-secondary-text); border: 1px solid var(--theme-border);
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px;
+  }
   body[data-theme] .mode-badge {
     background: var(--theme-primary-tint); color: var(--theme-secondary-text);
     border: 1px solid var(--theme-border);
@@ -585,7 +592,7 @@
   body[data-theme] .theme-toggle {
     display: inline-flex; align-items: center; gap: 0.4rem;
     height: 28px; padding: 0 0.75rem; border: 1px solid var(--theme-border);
-    border-radius: 20px; background: var(--theme-primary-tint);
+    border-radius: 20px; background: var(--theme-primary-soft);
     color: var(--theme-secondary-text); font: inherit; font-size: 0.76rem;
     font-weight: 700; cursor: pointer; transition: 0.15s; white-space: nowrap;
   }
@@ -593,7 +600,7 @@
     width: 11px; height: 11px; border-radius: 50%;
     background: var(--theme-primary);
   }
-  body[data-theme] .theme-toggle:hover { background: var(--theme-primary-soft); border-color: var(--theme-primary-light); }
+  body[data-theme] .theme-toggle:hover { background: var(--theme-primary-selected); border-color: var(--theme-primary-light); }
   body[data-theme] .btn-secondary {
     color: var(--theme-secondary-text); border-color: var(--theme-border);
   }
@@ -1233,7 +1240,6 @@
 
     const actions = isAdmin ? `
       <span class="song-actions">
-        <button class="icon-btn edit" data-id="${song.id}" title="编辑">✎</button>
         <button class="icon-btn delete" data-id="${song.id}" title="删除">✕</button>
       </span>` : '';
 
@@ -1725,19 +1731,19 @@
       const delCat = e.target.closest('.delete-cat');
       if (delCat) { e.stopPropagation(); deleteCategory(delCat.dataset.category); return; }
       
-      // 编辑单曲
-      const editBtn = e.target.closest('.icon-btn.edit');
-      if (editBtn) { e.stopPropagation(); openEditForm(editBtn.dataset.id); return; }
-      
       // 删除单曲
       const delBtn = e.target.closest('.icon-btn.delete');
       if (delBtn) { e.stopPropagation(); deleteSong(delBtn.dataset.id); return; }
 
-      // 点击行复制歌名
+      // 管理模式点击歌曲进行编辑，访客模式点击歌曲复制歌名
       const item = e.target.closest('.song-item');
       if (item) {
-        const t = item.dataset.title;
-        if (t) copyTitle(t);
+        if (isAdmin) {
+          openEditForm(item.dataset.id);
+        } else {
+          const t = item.dataset.title;
+          if (t) copyTitle(t);
+        }
       }
     });
 
@@ -1798,4 +1804,4 @@
 })();
 </script>
 </body>
-</html>
+</html>1
