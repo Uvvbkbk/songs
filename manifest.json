@@ -19,13 +19,5 @@
     "music",
     "productivity"
   ],
-  "prefer_related_applications": false,
-  "icons": [
-    {
-      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSLmrYzljZUiPgogIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBmaWxsPSIjZjdmNGVmIi8+CiAgPHRleHQgeD0iMjcwIiB5PSIzNjkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSInQXBwbGUgQ29sb3IgRW1vamknLCdTZWdvZSBVSSBFbW9qaScsJ05vdG8gQ29sb3IgRW1vamknLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzAwIj7wn461PC90ZXh0Pgo8L3N2Zz4K",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "prefer_related_applications": false
 }
