@@ -1009,8 +1009,6 @@
       <button class="go-site-option" type="button" data-site="bilibili" aria-pressed="false">bilibili</button>
       <button class="go-site-option" type="button" data-site="youtube" aria-pressed="false">YouTube</button>
       <button class="go-site-option" type="button" data-site="niconico" aria-pressed="false">niconico</button>
-      <button class="go-site-option" type="button" data-site="netease" aria-pressed="false">网易云音乐</button>
-      <button class="go-site-option" type="button" data-site="qqmusic" aria-pressed="false">QQ音乐</button>
     </div>
     <small class="go-shortcut-hint">快捷键：⌥/Alt + B 切换网站 · ⌥/Alt + Enter 前往</small>
     <label class="modal-label" for="goSearchTemplateInput">搜索词模板</label>
@@ -1047,13 +1045,11 @@
   const TOKEN_KEY = 'gh_gist_token';
   const THEME_KEY = 'song_list_theme';
   const GO_SETTINGS_KEY = 'song_list_go_settings';
-  const GO_SITES = ['bilibili', 'youtube', 'niconico', 'netease', 'qqmusic'];
+  const GO_SITES = ['bilibili', 'youtube', 'niconico'];
   const DEFAULT_SEARCH_TEMPLATES = {
     bilibili: '{song} 卡拉ok',
     youtube: '{song} カラオケ',
     niconico: '{song} ニコカラ',
-    netease: '{song}',
-    qqmusic: '{song}',
   };
   const THEMES = [
     { id: 'pink', label: '粉色' },
@@ -1696,25 +1692,6 @@
           package: 'jp.nicovideo.android',
         },
       },
-      netease: {
-        fallback: `https://music.163.com/#/search/m/?s=${encodedQuery}&type=1`,
-        ios: `orpheus://search?keyword=${encodedQuery}`,
-        directMobileLaunch: true,
-        android: {
-          scheme: 'orpheus',
-          path: `search?keyword=${encodedQuery}`,
-          package: 'com.netease.cloudmusic',
-        },
-      },
-      qqmusic: {
-        fallback: `https://y.qq.com/n/ryqq/search?w=${encodedQuery}`,
-        ios: `qqmusic://qq.com/ui/search?key=${encodedQuery}`,
-        android: {
-          scheme: 'qqmusic',
-          path: `qq.com/ui/search?key=${encodedQuery}`,
-          package: 'com.tencent.qqmusic',
-        },
-      },
     };
     const platform = platforms[goSite];
     if (!platform) {
@@ -1732,18 +1709,17 @@
       return;
     }
 
-    const searchTab = platform.directMobileLaunch ? null : window.open('about:blank', '_blank');
-    if (!platform.directMobileLaunch && !searchTab) {
+    const searchTab = window.open('about:blank', '_blank');
+    if (!searchTab) {
       showToast('浏览器阻止了新标签页，请允许弹出窗口后重试');
       return;
     }
-    if (searchTab) searchTab.opener = null;
+    searchTab.opener = null;
 
     if (isAndroid) {
       const { scheme, path, package: appPackage } = platform.android;
       const intentUrl = `intent://${path}#Intent;scheme=${scheme};package=${appPackage};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-      if (platform.directMobileLaunch) window.location.href = intentUrl;
-      else searchTab.location.replace(intentUrl);
+      searchTab.location.replace(intentUrl);
     } else if (isIOS) {
       let leftPage = false;
       const markPageHidden = () => { leftPage = true; };
@@ -1756,12 +1732,10 @@
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
       window.addEventListener('pagehide', markPageHidden);
-      if (platform.directMobileLaunch) window.location.href = platform.ios;
-      else searchTab.location.replace(platform.ios);
+      searchTab.location.replace(platform.ios);
       window.setTimeout(() => {
-        if (!leftPage && document.visibilityState === 'visible') {
-          if (platform.directMobileLaunch) window.location.href = fallbackUrl;
-          else if (!searchTab.closed) searchTab.location.replace(fallbackUrl);
+        if (!leftPage && !searchTab.closed && document.visibilityState === 'visible') {
+          searchTab.location.replace(fallbackUrl);
         }
         removePageListeners();
       }, 1800);
@@ -1779,8 +1753,6 @@
       bilibili: 'bilibili',
       youtube: 'YouTube',
       niconico: 'niconico',
-      netease: '网易云音乐',
-      qqmusic: 'QQ音乐',
     };
     const siteName = siteNames[goSite];
     const label = `在${siteName}搜索上次复制的歌名`;
