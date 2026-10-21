@@ -1699,6 +1699,7 @@
       netease: {
         fallback: `https://music.163.com/#/search/m/?s=${encodedQuery}&type=1`,
         ios: `orpheus://search?keyword=${encodedQuery}`,
+        directMobileLaunch: true,
         android: {
           scheme: 'orpheus',
           path: `search?keyword=${encodedQuery}`,
@@ -1731,18 +1732,18 @@
       return;
     }
 
-    const searchTab = window.open('about:blank', '_blank');
-    if (!searchTab) {
+    const searchTab = platform.directMobileLaunch ? null : window.open('about:blank', '_blank');
+    if (!platform.directMobileLaunch && !searchTab) {
       showToast('浏览器阻止了新标签页，请允许弹出窗口后重试');
       return;
     }
-    searchTab.opener = null;
+    if (searchTab) searchTab.opener = null;
 
     if (isAndroid) {
       const { scheme, path, package: appPackage } = platform.android;
-      searchTab.location.replace(
-        `intent://${path}#Intent;scheme=${scheme};package=${appPackage};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`
-      );
+      const intentUrl = `intent://${path}#Intent;scheme=${scheme};package=${appPackage};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
+      if (platform.directMobileLaunch) window.location.href = intentUrl;
+      else searchTab.location.replace(intentUrl);
     } else if (isIOS) {
       let leftPage = false;
       const markPageHidden = () => { leftPage = true; };
@@ -1755,10 +1756,12 @@
       };
       document.addEventListener('visibilitychange', handleVisibilityChange);
       window.addEventListener('pagehide', markPageHidden);
-      searchTab.location.replace(platform.ios);
+      if (platform.directMobileLaunch) window.location.href = platform.ios;
+      else searchTab.location.replace(platform.ios);
       window.setTimeout(() => {
-        if (!leftPage && !searchTab.closed && document.visibilityState === 'visible') {
-          searchTab.location.replace(fallbackUrl);
+        if (!leftPage && document.visibilityState === 'visible') {
+          if (platform.directMobileLaunch) window.location.href = fallbackUrl;
+          else if (!searchTab.closed) searchTab.location.replace(fallbackUrl);
         }
         removePageListeners();
       }, 1800);
