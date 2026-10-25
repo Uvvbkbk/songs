@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>歌える曲リスト</title>
+<meta name="description" content="管理个人歌单、按分类和标签筛选歌曲，并快速跳转到卡拉 OK 搜索。">
+<meta name="theme-color" content="#6c8fc7">
+<title>我会唱的歌｜个人歌单管理</title>
 <link rel="manifest" href="./manifest.json">
 <style>
   html { scrollbar-gutter: stable; }
@@ -988,8 +990,8 @@
     <h3>🔑 进入管理模式</h3>
     <p>
       粘贴你的 GitHub Personal Access Token（需勾选 <code>gist</code> 权限）。<br>
-      Token 只保存在本机浏览器，不会上传。<br>
-      没有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=MySongs" target="_blank">点这里创建一个 →</a>
+      Token 会保存在当前浏览器，并用于直接访问 GitHub API；请勿在公用设备上使用。<br>
+      没有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=MySongs" target="_blank" rel="noopener noreferrer">点这里创建一个 →</a>
     </p>
     <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
     <div class="modal-actions">
