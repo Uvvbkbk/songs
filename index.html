@@ -3,18 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="管理个人歌单、按分类和标签筛选歌曲，并快速跳转到卡拉 OK 搜索。">
-<meta name="theme-color" content="#6c8fc7">
-<title>我会唱的歌｜个人歌单管理</title>
+<title>歌える曲リスト</title>
 <link rel="manifest" href="./manifest.json">
 <style>
   html { scrollbar-gutter: stable; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  button, [role="button"], .song-item, .category-toggle, .category-name-pill, .icon-btn {
-    user-select: none; -webkit-user-select: none;
-    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     background: #eef2f9; min-height: 100vh; padding: 1rem;
@@ -81,33 +74,26 @@
 
   /* ============ 表单面板 ============ */
   .form-panel {
-    height: 0; opacity: 0; overflow: hidden;
-    padding: 0 0.65rem; margin: 0;
-    border: 0 solid transparent; border-radius: 14px;
-    background: #ffffff; box-shadow: none;
-    transition: opacity 180ms ease, padding 280ms ease, margin 280ms ease,
-      border-color 180ms ease, box-shadow 180ms ease;
-  }
-  .form-panel.show { position: relative; z-index: 20; overflow: visible; }
-  .form-panel-content { min-height: 0; }
-  .form-panel.show {
-    opacity: 1;
-    padding: 0.55rem 0.65rem 0.35rem; margin: 0.25rem 0 0;
-    border-width: 1px; border-color: #dde6f2;
+    background: #ffffff; border-radius: 14px;
+    padding: 0.85rem 1rem; margin-bottom: 0.9rem;
+    border: 1px solid #dde6f2;
     box-shadow: 0 2px 8px rgba(108,143,199,0.06);
+    display: none;
   }
+  .form-panel.show { display: block; }
+  .form-panel.show { position: relative; z-index: 20; }
   .form-panel h2 {
-    font-size: 0.76rem; color: #4a6a94; margin-bottom: 0.35rem;
+    font-size: 0.82rem; color: #4a6a94; margin-bottom: 0.6rem;
     font-weight: 700; display: flex; align-items: center; gap: 0.4rem;
   }
   .form-panel h2 .dot {
     width: 6px; height: 6px; border-radius: 50%; background: #6c8fc7;
   }
   .form-row {
-    display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: flex-end;
+    display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end;
   }
   .form-group {
-    flex: 1; min-width: 120px; display: flex; flex-direction: column;
+    flex: 1; min-width: 120px; display: flex; flex-direction: column; gap: 0.25rem;
     position: relative;
   }
   .form-group.title { flex: 2; min-width: 180px; }
@@ -225,25 +211,16 @@
   .go-fab {
     position: fixed; right: calc(1.25rem + env(safe-area-inset-right, 0px));
     bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)); z-index: 950;
-    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; width: 76px; height: 76px; padding: 0; border: none; border-radius: 50%;
-    background: var(--theme-primary, #6c8fc7); color: #fff;
-    font: inherit; font-size: 1.05rem; font-weight: 800; cursor: pointer;
-    box-shadow: 0 4px 14px var(--theme-shadow-strong, rgba(108,143,199,0.4));
-    transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
-    animation: go-glow 3s ease-in-out infinite;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px; padding: 0; border: none; border-radius: 50%;
+    background: linear-gradient(135deg, #8ba9d4, #6c8fc7); color: #fff;
+    font: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(108,143,199,0.4);
+    transition: background-color 160ms ease, box-shadow 160ms ease, transform 140ms ease;
   }
-  .go-site-caption {
-    max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    font-size: 0.58rem; font-weight: 600; letter-spacing: 0.02em; opacity: 0.9;
-  }
-  .go-fab:hover { transform: scale(1.1); }
+  .go-fab:hover { transform: translateY(-2px); }
   .go-fab:focus-visible { outline: 3px solid #4a6a94; outline-offset: 3px; }
   .go-fab:active { transform: scale(0.96); }
-  @keyframes go-glow {
-    0%, 100% { box-shadow: 0 4px 14px var(--theme-shadow, rgba(108,143,199,0.24)); }
-    50% { box-shadow: 0 5px 22px var(--theme-shadow-strong, rgba(108,143,199,0.42)); }
-  }
 
   /* ============ 标签筛选 ============ */
   .tag-filter-row {
@@ -266,8 +243,7 @@
     padding: 0.2rem 0.75rem; border-radius: 20px;
     font-size: 0.73rem; font-weight: 600;
     cursor: pointer; transition: 0.12s;
-    font-family: inherit; user-select: none; -webkit-user-select: none;
-    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    font-family: inherit; user-select: none;
   }
   .tag-filter:hover { background: #e8eff9; border-color: #a9bcd6; }
   .tag-filter.active {
@@ -457,8 +433,6 @@
     padding: 0.55rem 0.3rem;
     border-bottom: 1px dashed #dde6f2;
     cursor: pointer; transition: background 0.12s; border-radius: 6px;
-    user-select: none; -webkit-user-select: none;
-    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
   }
   .song-item:last-child { border-bottom: none; }
   .song-item:hover { background: #f5f8fd; }
@@ -486,7 +460,6 @@
     display: flex; gap: 0.1rem; flex-shrink: 0;
     opacity: 1;
   }
-  .song-actions .icon-btn { width: 20px; height: 20px; }
 
   .empty-message {
     text-align: center;
@@ -539,33 +512,6 @@
     display: block; margin-bottom: 0.3rem;
     color: #7a8ba8; font-size: 0.78rem; font-weight: 600;
   }
-  .go-site-options {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.45rem; margin-bottom: 0.85rem;
-  }
-  .go-site-option {
-    min-height: 40px; padding: 0.4rem 0.35rem; border: 1px solid #cdd9ea;
-    border-radius: 10px; background: #f8faff; color: #4a6a94;
-    font: inherit; font-size: 0.75rem; font-weight: 650; cursor: pointer;
-    transition: transform 140ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-  }
-  .go-site-option:hover { transform: translateY(-1px); border-color: #9bb5dc; }
-  .go-site-option[aria-pressed="true"] {
-    color: #fff; border-color: #6c8fc7;
-    background: linear-gradient(135deg, #8ba9d4, #6c8fc7);
-    box-shadow: 0 3px 9px rgba(108,143,199,0.24);
-  }
-  .go-site-option:focus-visible { outline: 2px solid #4a6a94; outline-offset: 2px; }
-  .go-shortcut-hint {
-    display: block; margin: -0.45rem 0 0.8rem;
-    color: #9aabc2; font-size: 0.68rem; line-height: 1.5;
-  }
-  .csv-settings {
-    border-top: 1px solid #e5ebf4; margin-top: 0.9rem; padding-top: 0.8rem;
-  }
-  .csv-settings .modal-label { margin-bottom: 0.5rem; }
-  .csv-actions { display: flex; gap: 0.5rem; }
-  .csv-hint { display: block; margin-top: 0.45rem; color: #9aabc2; font-size: 0.68rem; line-height: 1.5; }
   .modal input:focus,
   .modal select:focus {
     border-color: #6c8fc7;
@@ -747,7 +693,7 @@
   body[data-theme] .category-card,
   body[data-theme] .empty-message,
   body[data-theme] .modal { background-color: #fff; }
-  body[data-theme] .form-panel.show { border-color: var(--theme-border-soft); box-shadow: 0 2px 8px var(--theme-shadow); }
+  body[data-theme] .form-panel { border-color: var(--theme-border-soft); box-shadow: 0 2px 8px var(--theme-shadow); }
   body[data-theme] .form-panel h2,
   body[data-theme] .modal code { color: var(--theme-secondary-text); }
   body[data-theme] .form-panel h2 .dot { background: var(--theme-primary); }
@@ -766,7 +712,6 @@
     color: var(--theme-text); border-color: var(--theme-border); background: var(--theme-input);
   }
   body[data-theme] .modal-label { color: var(--theme-muted); }
-  body[data-theme] .go-shortcut-hint { color: var(--theme-muted); }
   body[data-theme] .form-group input::placeholder,
   body[data-theme] .search-box input::placeholder { color: var(--theme-placeholder); }
   body[data-theme] .dropdown-btn { background: var(--theme-primary-tint); color: var(--theme-primary); }
@@ -858,10 +803,7 @@
   body[data-theme] .toast {
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
   }
-  body[data-theme] .form-panel {
-    transition: opacity 180ms ease, padding 280ms ease, margin 280ms ease,
-      border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
-  }
+  body[data-theme] .form-panel.show { animation: panel-enter 180ms ease-out both; }
   body[data-theme] .quick-panel.show { animation: panel-enter 150ms ease-out both; }
   body[data-theme] .modal-mask.show { animation: fade-in 160ms ease-out both; }
   body[data-theme] .modal-mask.show .modal { animation: modal-enter 180ms ease-out both; }
@@ -896,7 +838,7 @@
   @keyframes modal-enter { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
   @media (prefers-reduced-motion: reduce) {
     .tag-filter-items { transition-duration: 0.01ms !important; }
-    .go-fab, .go-site-option { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    .go-fab { transition-duration: 0.01ms !important; }
     body[data-theme] *,
     body[data-theme] *::before,
     body[data-theme] *::after {
@@ -904,14 +846,6 @@
       animation-iteration-count: 1 !important;
       scroll-behavior: auto !important;
       transition-duration: 0.01ms !important;
-    }
-  }
-  @media (hover: none) {
-    .tag-filter:hover:not(.active) {
-      background: #ffffff; border-color: #cdd9ea;
-    }
-    body[data-theme] .tag-filter:hover:not(.active) {
-      background: var(--theme-primary-tint); border-color: var(--theme-border);
     }
   }
 </style>
@@ -934,41 +868,42 @@
   </div>
 
   <!-- 管理员表单 -->
-  <div class="form-panel" id="formPanel" inert aria-hidden="true">
-    <div class="form-panel-content">
-      <h2><span class="dot"></span><span id="formTitle">添加新歌</span></h2>
-      <div class="form-row">
-        <div class="form-group title">
-          <input type="text" id="titleInput" placeholder="歌名 *" aria-label="歌名" maxlength="80">
+  <div class="form-panel" id="formPanel">
+    <h2><span class="dot"></span><span id="formTitle">添加新歌</span></h2>
+    <div class="form-row">
+      <div class="form-group title">
+        <label for="titleInput">歌名 *</label>
+        <input type="text" id="titleInput" placeholder="例如：ヒマワリ" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label for="categoryInput">分类</label>
+        <div class="input-wrapper">
+          <input type="text" id="categoryInput" placeholder="例如：动漫" maxlength="20" autocomplete="off">
+          <button class="dropdown-btn" id="categoryDropdownBtn" title="选择已有分类">▼</button>
         </div>
-        <div class="form-group">
-          <div class="input-wrapper">
-            <input type="text" id="categoryInput" placeholder="分类" aria-label="分类" maxlength="20" autocomplete="off">
-            <button class="dropdown-btn" id="categoryDropdownBtn" title="选择已有分类">▼</button>
-          </div>
-          <div class="quick-panel" id="categoryQuickPanel"></div>
+        <div class="quick-panel" id="categoryQuickPanel"></div>
+      </div>
+      <div class="form-group">
+        <label for="tagsInput">标签</label>
+        <div class="input-wrapper">
+          <input type="text" id="tagsInput" placeholder="例如：经典" autocomplete="off">
+          <button class="dropdown-btn" id="tagsDropdownBtn" title="选择已有标签">▼</button>
         </div>
-        <div class="form-group">
-          <div class="input-wrapper">
-            <input type="text" id="tagsInput" placeholder="标签" aria-label="标签" autocomplete="off">
-            <button class="dropdown-btn" id="tagsDropdownBtn" title="选择已有标签">▼</button>
-          </div>
-          <div class="quick-panel" id="tagsQuickPanel"></div>
-        </div>
-        <div class="form-buttons">
-          <button class="btn-form btn-primary" id="saveBtn">保存</button>
-          <button class="btn-form btn-secondary" id="cancelBtn" style="display:none;">取消</button>
-        </div>
+        <div class="quick-panel" id="tagsQuickPanel"></div>
+      </div>
+      <div class="form-buttons">
+        <button class="btn-form btn-primary" id="saveBtn">保存</button>
+        <button class="btn-form btn-secondary" id="cancelBtn" style="display:none;">取消</button>
       </div>
     </div>
   </div>
 
   <div class="search-row">
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="（选一首歌，点Go搜索）" autocomplete="off">
+      <input type="text" id="searchInput" placeholder="（点歌曲复制歌名，点Go!!按设置的网站搜索）" autocomplete="off">
     </div>
     <button class="sort-btn" id="sortBtn" type="button" data-mode="default" title="排序：默认（点击切换）">排序：默认</button>
-    <button class="random-btn" id="randomBtn" title="随机复制一首">随机选曲</button>
+    <button class="random-btn" id="randomBtn" title="随机复制一首">「 随机 」</button>
   </div>
   </div>
 
@@ -982,7 +917,7 @@
 </div>
 
 <button class="go-fab" id="goBtn" type="button" title="在哔哩哔哩搜索上次复制的歌名"
-        aria-label="在哔哩哔哩搜索上次复制的歌名">Go!!<span class="go-site-caption" id="goSiteCaption">bilibili</span></button>
+        aria-label="在哔哩哔哩搜索上次复制的歌名">Go!！</button>
 
 <!-- 登录模态框 -->
 <div class="modal-mask" id="loginModal">
@@ -990,8 +925,8 @@
     <h3>🔑 进入管理模式</h3>
     <p>
       粘贴你的 GitHub Personal Access Token（需勾选 <code>gist</code> 权限）。<br>
-      Token 会保存在当前浏览器，并用于直接访问 GitHub API；请勿在公用设备上使用。<br>
-      没有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=MySongs" target="_blank" rel="noopener noreferrer">点这里创建一个 →</a>
+      Token 只保存在本机浏览器，不会上传。<br>
+      没有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=MySongs" target="_blank">点这里创建一个 →</a>
     </p>
     <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
     <div class="modal-actions">
@@ -1006,24 +941,14 @@
   <div class="modal">
     <h3>⚙️ Go!! 设置</h3>
     <p>设置 Go!! 按钮打开的网站和搜索词。搜索词中的 <code>{song}</code> 会替换为刚复制的歌曲名。</p>
-    <span class="modal-label" id="goSiteLabel">前往网站</span>
-    <div class="go-site-options" id="goSiteOptions" role="group" aria-labelledby="goSiteLabel">
-      <button class="go-site-option" type="button" data-site="bilibili" aria-pressed="false">bilibili</button>
-      <button class="go-site-option" type="button" data-site="youtube" aria-pressed="false">YouTube</button>
-      <button class="go-site-option" type="button" data-site="niconico" aria-pressed="false">niconico</button>
-    </div>
-    <small class="go-shortcut-hint">快捷键：⌥/Alt + B 切换网站 · ⌥/Alt + Enter 前往</small>
+    <label class="modal-label" for="goSiteInput">前往网站</label>
+    <select id="goSiteInput">
+      <option value="bilibili">bilibili</option>
+      <option value="youtube">YouTube</option>
+      <option value="niconico">niconico</option>
+    </select>
     <label class="modal-label" for="goSearchTemplateInput">搜索词模板</label>
     <input type="text" id="goSearchTemplateInput" maxlength="200" autocomplete="off">
-    <div class="csv-settings">
-      <span class="modal-label">歌单 CSV</span>
-      <div class="csv-actions">
-        <button class="btn btn-secondary" id="exportCsvBtn" type="button">导出 CSV</button>
-        <button class="btn btn-secondary" id="importCsvBtn" type="button">导入 CSV</button>
-        <input id="importCsvInput" type="file" accept=".csv,text/csv" hidden>
-      </div>
-      <small class="csv-hint">导入需要管理模式，会确认后替换当前歌单并同步到云端。</small>
-    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="goSettingsCancelBtn" type="button">取消</button>
       <button class="btn btn-primary" id="goSettingsSaveBtn" type="button">保存</button>
@@ -1070,7 +995,6 @@
   let editingId = null;
   let token = '';
   let goSite = 'bilibili';
-  let editingGoSite = goSite;
   let goSearchTemplate = DEFAULT_SEARCH_TEMPLATES.bilibili;
   let isEditingTags = false;
   let filterTransitionTimer = 0;
@@ -1092,10 +1016,6 @@
   const sortBtn = $('sortBtn');
   const toastEl = $('toast');
   const formPanel = $('formPanel');
-  const formPanelContent = formPanel.querySelector('.form-panel-content');
-  let formPanelAnimation = null;
-  let formPanelViewportFrame = 0;
-  let formPanelViewportVersion = 0;
   const formTitle = $('formTitle');
   const titleInput = $('titleInput');
   const tagsInput = $('tagsInput');
@@ -1107,14 +1027,10 @@
   const themeToggleBtn = $('themeToggleBtn');
   const goSettingsBtn = $('goSettingsBtn');
   const goSettingsModal = $('goSettingsModal');
-  const goSiteOptions = $('goSiteOptions');
-  const goSiteCaption = $('goSiteCaption');
+  const goSiteInput = $('goSiteInput');
   const goSearchTemplateInput = $('goSearchTemplateInput');
   const goSettingsSaveBtn = $('goSettingsSaveBtn');
   const goSettingsCancelBtn = $('goSettingsCancelBtn');
-  const exportCsvBtn = $('exportCsvBtn');
-  const importCsvBtn = $('importCsvBtn');
-  const importCsvInput = $('importCsvInput');
   const loginModal = $('loginModal');
   const tokenInput = $('tokenInput');
   const loginOkBtn = $('loginOkBtn');
@@ -1305,9 +1221,7 @@
   function updateTagSelectionState() {
     tagFilterRow.querySelectorAll('.tag-filter[data-tag]').forEach(btn => {
       const tag = btn.dataset.tag;
-      const isSelected = selectedTags.has(tag);
-      btn.classList.toggle('active', isSelected);
-      btn.setAttribute('aria-pressed', String(isSelected));
+      btn.classList.toggle('active', selectedTags.has(tag));
     });
   }
 
@@ -1345,9 +1259,8 @@
     } else {
       // 正常模式：渲染标签药丸
       sorted.forEach(([tag, count]) => {
-        const isSelected = selectedTags.has(tag);
-        const active = isSelected ? 'active' : '';
-        html += `<button class="tag-filter ${active}" data-tag="${escapeHtml(tag)}" aria-pressed="${isSelected}">
+        const active = selectedTags.has(tag) ? 'active' : '';
+        html += `<button class="tag-filter ${active}" data-tag="${escapeHtml(tag)}">
           ${escapeHtml(tag)}<span class="count">${count}</span>
         </button>`;
       });
@@ -1665,52 +1578,22 @@
     }
     const query = goSearchTemplate.replace(/\{song\}/gi, lastCopiedTitle).trim();
     const encodedQuery = encodeURIComponent(query);
-    const platforms = {
-      bilibili: {
-        fallback: `https://search.bilibili.com/all?keyword=${encodedQuery}`,
-        mobileFallback: `https://m.bilibili.com/search?keyword=${encodedQuery}`,
-        ios: `bilibili://search?keyword=${encodedQuery}`,
-        android: {
-          scheme: 'bilibili',
-          path: `search?keyword=${encodedQuery}`,
-          package: 'tv.danmaku.bili',
-        },
-      },
-      youtube: {
-        fallback: `https://www.youtube.com/results?search_query=${encodedQuery}`,
-        ios: `youtube://results?search_query=${encodedQuery}`,
-        android: {
-          scheme: 'https',
-          path: `www.youtube.com/results?search_query=${encodedQuery}`,
-          package: 'com.google.android.youtube',
-        },
-      },
-      niconico: {
-        fallback: `https://www.nicovideo.jp/search/${encodedQuery}`,
-        ios: `nicovideo://search?word=${encodedQuery}`,
-        android: {
-          scheme: 'nicovideo',
-          path: `search?word=${encodedQuery}`,
-          package: 'jp.nicovideo.android',
-        },
-      },
-    };
-    const platform = platforms[goSite];
-    if (!platform) {
-      showToast('⚠️ 当前网站暂不支持搜索');
+    if (goSite === 'youtube') {
+      openSearchUrl(`https://www.youtube.com/results?search_query=${encodedQuery}`);
       return;
     }
-    const isAndroid = /Android/i.test(navigator.userAgent);
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const fallbackUrl = isIOS || isAndroid
-      ? (platform.mobileFallback || platform.fallback)
-      : platform.fallback;
-    if (!isAndroid && !isIOS) {
-      openSearchUrl(fallbackUrl);
+    if (goSite === 'niconico') {
+      openSearchUrl(`https://www.nicovideo.jp/search/${encodedQuery}`);
       return;
     }
 
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isMobile = isAndroid || isIOS;
+    const fallbackUrl = isMobile
+      ? `https://m.bilibili.com/search?keyword=${encodedQuery}`
+      : `https://search.bilibili.com/all?keyword=${encodedQuery}`;
     const searchTab = window.open('about:blank', '_blank');
     if (!searchTab) {
       showToast('浏览器阻止了新标签页，请允许弹出窗口后重试');
@@ -1719,28 +1602,16 @@
     searchTab.opener = null;
 
     if (isAndroid) {
-      const { scheme, path, package: appPackage } = platform.android;
-      const intentUrl = `intent://${path}#Intent;scheme=${scheme};package=${appPackage};S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-      searchTab.location.replace(intentUrl);
+      searchTab.location.replace(
+        `intent://search?keyword=${encodedQuery}#Intent;scheme=bilibili;package=tv.danmaku.bili;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`
+      );
     } else if (isIOS) {
-      let leftPage = false;
-      const markPageHidden = () => { leftPage = true; };
-      const handleVisibilityChange = () => {
-        if (document.visibilityState === 'hidden') markPageHidden();
-      };
-      const removePageListeners = () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('pagehide', markPageHidden);
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('pagehide', markPageHidden);
-      searchTab.location.replace(platform.ios);
+      searchTab.location.replace(`bilibili://search?keyword=${encodedQuery}`);
       window.setTimeout(() => {
-        if (!leftPage && !searchTab.closed && document.visibilityState === 'visible') {
-          searchTab.location.replace(fallbackUrl);
-        }
-        removePageListeners();
-      }, 1800);
+        if (!searchTab.closed) searchTab.location.replace(fallbackUrl);
+      }, 1500);
+    } else {
+      searchTab.location.replace(fallbackUrl);
     }
   }
 
@@ -1751,30 +1622,17 @@
   }
 
   function updateGoButtonLabel() {
-    const siteNames = {
-      bilibili: 'bilibili',
-      youtube: 'YouTube',
-      niconico: 'niconico',
-    };
-    const siteName = siteNames[goSite];
-    const label = `在${siteName}搜索上次复制的歌名`;
-    goSiteCaption.textContent = siteName;
+    const siteNames = { bilibili: 'bilibili', youtube: 'YouTube', niconico: 'niconico' };
+    const label = `在${siteNames[goSite]}搜索上次复制的歌名`;
     goBtn.title = label;
     goBtn.setAttribute('aria-label', label);
   }
 
   function openGoSettings() {
-    editingGoSite = goSite;
-    updateGoSiteOptions();
+    goSiteInput.value = goSite;
     goSearchTemplateInput.value = goSearchTemplate;
     goSettingsModal.classList.add('show');
-    goSiteOptions.querySelector('[aria-pressed="true"]').focus();
-  }
-
-  function updateGoSiteOptions() {
-    goSiteOptions.querySelectorAll('.go-site-option').forEach(button => {
-      button.setAttribute('aria-pressed', String(button.dataset.site === editingGoSite));
-    });
+    goSiteInput.focus();
   }
 
   function updateDefaultGoSearchTemplate() {
@@ -1782,34 +1640,12 @@
     const isDefaultTemplate = Object.values(DEFAULT_SEARCH_TEMPLATES).includes(currentTemplate)
       || currentTemplate === '{song} 卡拉ok カラオケ ニコカラ';
     if (isDefaultTemplate) {
-      goSearchTemplateInput.value = DEFAULT_SEARCH_TEMPLATES[editingGoSite];
+      goSearchTemplateInput.value = DEFAULT_SEARCH_TEMPLATES[goSiteInput.value];
     }
-  }
-
-  function cycleGoSite() {
-    const isSettingsOpen = goSettingsModal.classList.contains('show');
-    const currentSite = isSettingsOpen ? editingGoSite : goSite;
-    const nextSite = GO_SITES[(GO_SITES.indexOf(currentSite) + 1) % GO_SITES.length];
-    if (isSettingsOpen) {
-      editingGoSite = nextSite;
-      updateGoSiteOptions();
-      updateDefaultGoSearchTemplate();
-      return;
-    }
-    if (loginModal.classList.contains('show')) return;
-    const isDefaultTemplate = Object.values(DEFAULT_SEARCH_TEMPLATES).includes(goSearchTemplate)
-      || goSearchTemplate === '{song} 卡拉ok カラオケ ニコカラ';
-    goSite = nextSite;
-    if (isDefaultTemplate) goSearchTemplate = DEFAULT_SEARCH_TEMPLATES[goSite];
-    localStorage.setItem(GO_SETTINGS_KEY, JSON.stringify({
-      site: goSite,
-      searchTemplate: goSearchTemplate,
-    }));
-    updateGoButtonLabel();
   }
 
   function saveGoSettings() {
-    const nextSite = editingGoSite;
+    const nextSite = goSiteInput.value;
     const nextTemplate = goSearchTemplateInput.value.trim();
     if (!GO_SITES.includes(nextSite)) {
       showToast('⚠️ 请选择有效的网站');
@@ -1829,133 +1665,6 @@
     updateGoButtonLabel();
     goSettingsModal.classList.remove('show');
     showToast('✅ Go!! 设置已保存');
-  }
-
-  function csvEscape(value) {
-    const text = String(value ?? '');
-    return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-  }
-
-  function exportSongsCsv() {
-    const rows = [
-      ['歌名', '分类', '标签'],
-      ...songs.map(song => [
-        song.title || '',
-        song.category || '',
-        songTags(song).join('|'),
-      ]),
-    ];
-    const csv = '\uFEFF' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
-    const blobUrl = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = `歌单-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    showToast(`✅ 已导出 ${songs.length} 首歌曲`);
-  }
-
-  function parseCsv(text) {
-    const rows = [];
-    let row = [];
-    let field = '';
-    let inQuotes = false;
-    let quoteClosed = false;
-
-    for (let i = 0; i < text.length; i += 1) {
-      const char = text[i];
-      if (inQuotes) {
-        if (char === '"') {
-          if (text[i + 1] === '"') {
-            field += '"';
-            i += 1;
-          } else {
-            inQuotes = false;
-            quoteClosed = true;
-          }
-        } else {
-          field += char;
-        }
-        continue;
-      }
-
-      if (char === ',' || char === '\r' || char === '\n') {
-        row.push(field);
-        field = '';
-        quoteClosed = false;
-        if (char === ',') continue;
-        rows.push(row);
-        row = [];
-        if (char === '\r' && text[i + 1] === '\n') i += 1;
-        continue;
-      }
-      if (char === '"') {
-        if (field !== '' || quoteClosed) throw new Error('引号格式不正确');
-        inQuotes = true;
-        continue;
-      }
-      if (quoteClosed) throw new Error('闭合引号后只能有逗号或换行');
-      field += char;
-    }
-
-    if (inQuotes) throw new Error('CSV 中有未闭合的引号');
-    if (field !== '' || row.length > 0 || (!text.endsWith('\n') && !text.endsWith('\r'))) {
-      row.push(field);
-      rows.push(row);
-    }
-    return rows;
-  }
-
-  function importSongsCsv(file) {
-    if (!isAdmin) {
-      showToast('⚠️ 请先进入管理模式再导入');
-      return;
-    }
-
-    file.text().then(async text => {
-      const rows = parseCsv(text.replace(/^\uFEFF/, ''));
-      const nonEmptyRows = rows.filter(cells => cells.some(cell => cell.trim() !== ''));
-      if (nonEmptyRows.length === 0) throw new Error('CSV 文件为空');
-
-      const header = nonEmptyRows[0].map(cell => cell.trim());
-      const columns = ['歌名', '分类', '标签'];
-      if (header.length !== columns.length
-        || columns.some(column => header.filter(cell => cell === column).length !== 1)) {
-        throw new Error('表头必须包含「歌名、分类、标签」三列');
-      }
-      const indexes = columns.map(column => header.indexOf(column));
-      const importedSongs = nonEmptyRows.slice(1).map((cells, index) => {
-        const rowNumber = index + 2;
-        if (cells.length !== header.length) {
-          throw new Error(`第 ${rowNumber} 行的列数与表头不一致`);
-        }
-        const title = cells[indexes[0]].trim();
-        if (!title) throw new Error(`第 ${rowNumber} 行缺少歌名`);
-        return {
-          id: generateId(),
-          title,
-          category: cells[indexes[1]].trim(),
-          tags: [...new Set(cells[indexes[2]].split('|').map(tag => tag.trim()).filter(Boolean))],
-        };
-      });
-
-      if (!isAdmin) {
-        showToast('⚠️ 管理模式已退出，请重新导入');
-        return;
-      }
-      const confirmed = confirm(
-        `将用 CSV 中的 ${importedSongs.length} 首歌曲替换当前 ${songs.length} 首歌曲，并同步到云端。此操作无法自动撤销，确定继续吗？`
-      );
-      if (!confirmed) return;
-      await saveToGist(importedSongs, `✅ 已导入并替换为 ${importedSongs.length} 首歌曲`);
-    }).catch(error => {
-      console.error(error);
-      showToast(`❌ CSV 导入失败：${error.message}`);
-    }).finally(() => {
-      importCsvInput.value = '';
-    });
   }
 
   async function saveToGist(newSongs, successMsg) {
@@ -2001,6 +1710,8 @@
     titleInput.classList.remove('duplicate');
     cancelBtn.style.display = 'inline-flex';
     saveBtn.textContent = '更新';
+    titleInput.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function isDuplicateTitle(title) {
@@ -2109,117 +1820,15 @@
     if (admin) {
       avatarEntry.setAttribute('aria-label', '退出管理模式');
       avatarEntry.title = '点击退出管理模式；右键可彻底登出';
-      setFormPanelExpanded(true);
+      formPanel.classList.add('show');
     } else {
       avatarEntry.setAttribute('aria-label', '进入管理模式');
       avatarEntry.title = '点击头像进入管理模式';
-      setFormPanelExpanded(false);
+      formPanel.classList.remove('show');
       resetForm();
     }
     renderTagFilter();
     render();
-  }
-
-  function setFormPanelExpanded(expanded) {
-    const currentHeight = formPanel.getBoundingClientRect().height;
-    if (formPanelAnimation) formPanelAnimation.cancel();
-    cancelAnimationFrame(formPanelViewportFrame);
-    const viewportVersion = ++formPanelViewportVersion;
-    const viewportAnchor = getFormPanelViewportAnchor();
-    const anchorTop = resolveFormPanelViewportAnchor(viewportAnchor)?.getBoundingClientRect().top;
-    formPanel.inert = !expanded;
-    formPanel.setAttribute('aria-hidden', String(!expanded));
-    if (expanded) {
-      formPanelContent.style.overflow = 'hidden';
-      formPanel.classList.add('show');
-      const verticalSpace = parseFloat(getComputedStyle(document.documentElement).fontSize) * 0.9 + 2;
-      const targetHeight = formPanelContent.scrollHeight + verticalSpace;
-      formPanel.style.height = `${currentHeight}px`;
-      formPanel.offsetHeight;
-      formPanelAnimation = formPanel.animate(
-        [{ height: `${currentHeight}px` }, { height: `${targetHeight}px` }],
-        {
-          duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 280,
-          easing: 'cubic-bezier(0.2, 0.75, 0.25, 1)',
-        }
-      );
-      preserveViewportAnchor(viewportAnchor, anchorTop, formPanelAnimation, viewportVersion);
-      formPanelAnimation.onfinish = () => {
-        if (!formPanel.classList.contains('show')) return;
-        adjustViewportAnchor(viewportAnchor, anchorTop);
-        formPanel.style.height = 'auto';
-        formPanelContent.style.overflow = 'visible';
-        formPanelAnimation = null;
-      };
-      return;
-    }
-    if (formPanel.classList.contains('show')) {
-      formPanel.style.height = `${currentHeight}px`;
-      formPanelContent.style.overflow = 'hidden';
-      formPanel.classList.remove('show');
-      formPanel.offsetHeight;
-      formPanelAnimation = formPanel.animate(
-        [{ height: `${currentHeight}px` }, { height: '0px' }],
-        {
-          duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 280,
-          easing: 'cubic-bezier(0.2, 0.75, 0.25, 1)',
-        }
-      );
-      preserveViewportAnchor(viewportAnchor, anchorTop, formPanelAnimation, viewportVersion);
-      formPanelAnimation.onfinish = () => {
-        if (formPanel.classList.contains('show')) return;
-        adjustViewportAnchor(viewportAnchor, anchorTop);
-        formPanel.style.height = '0px';
-        formPanelAnimation = null;
-      };
-      return;
-    }
-    formPanelContent.style.overflow = 'hidden';
-    formPanel.style.height = '0px';
-  }
-
-  function getFormPanelViewportAnchor() {
-    const viewportMiddle = window.innerHeight / 2;
-    let nearestId = null;
-    let nearestDistance = Infinity;
-    categoriesGrid.querySelectorAll('.song-item').forEach(song => {
-      const rect = song.getBoundingClientRect();
-      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
-      const distance = Math.abs((rect.top + rect.bottom) / 2 - viewportMiddle);
-      if (distance < nearestDistance) {
-        nearestId = song.dataset.id;
-        nearestDistance = distance;
-      }
-    });
-    return { songId: nearestId };
-  }
-
-  function resolveFormPanelViewportAnchor(anchor) {
-    if (anchor.songId) {
-      const matchingSong = [...categoriesGrid.querySelectorAll('.song-item')]
-        .find(song => song.dataset.id === anchor.songId);
-      if (matchingSong) return matchingSong;
-    }
-    return categoriesGrid;
-  }
-
-  function adjustViewportAnchor(anchor, targetTop) {
-    if (targetTop === undefined) return;
-    const element = resolveFormPanelViewportAnchor(anchor);
-    if (!element.isConnected) return;
-    const difference = element.getBoundingClientRect().top - targetTop;
-    if (Math.abs(difference) > 0.5) window.scrollBy(0, difference);
-  }
-
-  function preserveViewportAnchor(anchor, targetTop, animation, version) {
-    const track = () => {
-      if (version !== formPanelViewportVersion) return;
-      adjustViewportAnchor(anchor, targetTop);
-      if (animation.playState === 'running') {
-        formPanelViewportFrame = requestAnimationFrame(track);
-      }
-    };
-    formPanelViewportFrame = requestAnimationFrame(track);
   }
 
   async function login() {
@@ -2310,29 +1919,12 @@
   // 事件绑定
   // ============================================================
   function bindEvents() {
-    formPanel.addEventListener('transitionend', e => {
-      if (e.propertyName !== 'max-height' || !formPanel.classList.contains('show')) return;
-      clearTimeout(formPanelRevealTimer);
-      formPanel.style.maxHeight = 'none';
-      formPanelContent.style.overflow = 'visible';
-    });
-
     // 搜索
     searchInput.addEventListener('input', () => {
       currentSearch = searchInput.value;
       render();
     });
     goBtn.addEventListener('click', searchLastCopiedTitle);
-    window.addEventListener('keydown', e => {
-      if (!e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
-      if (e.code === 'KeyB') {
-        e.preventDefault();
-        cycleGoSite();
-      } else if (e.key === 'Enter' && !document.querySelector('.modal-mask.show')) {
-        e.preventDefault();
-        searchLastCopiedTitle();
-      }
-    }, true);
     randomBtn.addEventListener('click', randomCopy);
     sortBtn.addEventListener('click', () => {
       const idx = SORT_MODES.findIndex(m => m.id === sortMode);
@@ -2437,25 +2029,7 @@
       setTheme(nextTheme.id, true);
     });
     goSettingsBtn.addEventListener('click', openGoSettings);
-    exportCsvBtn.addEventListener('click', exportSongsCsv);
-    importCsvBtn.addEventListener('click', () => {
-      if (!isAdmin) {
-        showToast('⚠️ 请先进入管理模式再导入');
-        return;
-      }
-      importCsvInput.click();
-    });
-    importCsvInput.addEventListener('change', () => {
-      const file = importCsvInput.files[0];
-      if (file) importSongsCsv(file);
-    });
-    goSiteOptions.addEventListener('click', e => {
-      const button = e.target.closest('.go-site-option');
-      if (!button) return;
-      editingGoSite = button.dataset.site;
-      updateGoSiteOptions();
-      updateDefaultGoSearchTemplate();
-    });
+    goSiteInput.addEventListener('change', updateDefaultGoSearchTemplate);
     goSettingsSaveBtn.addEventListener('click', saveGoSettings);
     goSettingsCancelBtn.addEventListener('click', () => goSettingsModal.classList.remove('show'));
     goSearchTemplateInput.addEventListener('keydown', e => {
@@ -2470,13 +2044,6 @@
     });
     tokenInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); login(); }
-    });
-    document.querySelectorAll('.modal-mask').forEach(mask => {
-      mask.addEventListener('click', e => {
-        if (e.target !== mask) return;
-        mask.classList.remove('show');
-        if (mask === loginModal) tokenInput.value = '';
-      });
     });
 
     // 快捷选择面板
@@ -2601,7 +2168,7 @@
   // 启动
   // ============================================================
   async function init() {
-    document.querySelector('.sticky-toolbar').append(formPanel);
+    document.querySelector('.sticky-toolbar').after(formPanel);
     initSakuraBackground();
     bindEvents();
     setAdminUI(false);
