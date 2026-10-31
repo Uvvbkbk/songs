@@ -42,9 +42,11 @@
   .topbar h1 {
     font-size: 1.15rem; font-weight: 700; color: #3b5578;
     display: flex; align-items: center; gap: 0.4rem;
+    position: relative; padding-left: 4.3rem;
   }
   .topbar-avatar {
-    width: 30px; height: 30px; flex: 0 0 30px;
+    position: absolute; top: 0; left: 0;
+    width: 60px; height: 60px;
     border: 2px solid #ffffff; border-radius: 50%;
     object-fit: cover;
     box-shadow: 0 0 0 2px #9bb5dc, 0 2px 6px rgba(59,85,120,0.2);
@@ -186,7 +188,7 @@
   /* ============ 搜索行 ============ */
   .search-row {
     display: flex; gap: 0.5rem; margin: 0; align-items: center;
-    padding: 0.12rem 0.1rem 0;
+    padding: 0.12rem 0.1rem 0 4.3rem;
   }
   .search-box {
     flex: 1; display: flex; align-items: center;
@@ -336,6 +338,7 @@
     break-inside: avoid;
     display: inline-block; width: 100%;
     margin-bottom: 1.1rem;
+    container: category-card / inline-size;
   }
   .sakura-layer {
     position: fixed; inset: 0; z-index: 900; overflow: hidden;
@@ -465,6 +468,15 @@
 
   /* ============ 歌曲列表 ============ */
   .song-list { list-style: none; padding: 0; margin: 0; }
+  .song-list[hidden] { display: none; }
+  @container category-card (min-width: 620px) {
+    .song-list--two-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 1.1rem;
+    }
+    .song-list--two-columns .song-item:last-child { border-bottom: 1px dashed #dde6f2; }
+  }
   .song-item {
     display: flex; align-items: center; gap: 0.6rem;
     padding: 0.55rem 0.3rem;
@@ -476,6 +488,8 @@
   .song-item:last-child { border-bottom: none; }
   .song-item:hover { background: #f5f8fd; }
   .song-item:active { background: #e8eff9; }
+  .song-item.is-spotlight { background: #e8eff9; }
+  body[data-theme] .song-item.is-spotlight { background: var(--theme-primary-soft); }
   .song-number {
     font-size: 0.9rem; font-weight: 700; color: #8ba9d4;
     min-width: 1.6rem; text-align: right; flex-shrink: 0;
@@ -564,7 +578,7 @@
     color: #7a8ba8; font-size: 0.78rem; font-weight: 600;
   }
   .go-site-options {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.45rem; margin-bottom: 0.85rem;
   }
   .go-site-option {
@@ -1065,6 +1079,7 @@
       <button class="go-site-option" type="button" data-site="bilibili" aria-pressed="false">bilibili</button>
       <button class="go-site-option" type="button" data-site="youtube" aria-pressed="false">YouTube</button>
       <button class="go-site-option" type="button" data-site="niconico" aria-pressed="false">niconico</button>
+      <button class="go-site-option" type="button" data-site="google" aria-pressed="false">Google</button>
     </div>
     <small class="go-shortcut-hint">快捷键：⌥/Alt + B 切换网站 · ⌥/Alt + Enter 前往</small>
     <label class="modal-label" for="goSearchTemplateInput">搜索词模板</label>
@@ -1107,11 +1122,12 @@
   const THEME_KEY = 'song_list_theme';
   const SAKURA_KEY = 'song_list_sakura_enabled';
   const GO_SETTINGS_KEY = 'song_list_go_settings';
-  const GO_SITES = ['bilibili', 'youtube', 'niconico'];
+  const GO_SITES = ['bilibili', 'youtube', 'niconico', 'google'];
   const DEFAULT_SEARCH_TEMPLATES = {
     bilibili: '{song} 卡拉ok',
     youtube: '{song} カラオケ',
     niconico: '{song} ニコカラ',
+    google: '{song} 曲 紹介',
   };
   const THEMES = [
     { id: 'pink', label: '粉色' },
@@ -1208,7 +1224,7 @@
 
   async function fetchGist() {
     const headers = { 'Accept': 'application/vnd.github+json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (token) headers['Authorization'] = `token ${token}`;
     const res = await fetch(`${GH_API}/gists/${CONFIG.GIST_ID}`, { headers });
     if (!res.ok) throw new Error(`读取失败: ${res.status}`);
     const data = await res.json();
@@ -1226,7 +1242,7 @@
       method: 'PATCH',
       headers: {
         'Accept': 'application/vnd.github+json',
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `token ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -1528,7 +1544,7 @@
             <span class="category-count">${list.length}</span>
             ${catActions}
           </div>
-          <ul class="song-list" id="${listId}"${isCollapsed ? ' hidden' : ''}>
+          <ul class="song-list${list.length >= 12 ? ' song-list--two-columns' : ''}" id="${listId}"${isCollapsed ? ' hidden' : ''}>
             ${list.map((s, i) => renderItem(s, i + 1)).join('')}
           </ul>
         </div>
@@ -1745,6 +1761,23 @@
     }
     const pick = pool[Math.floor(Math.random() * pool.length)];
     copyTitle(pick.title);
+    revealSong(pick.id);
+  }
+
+  let spotlightTimer = 0;
+  function revealSong(id) {
+    const item = [...categoriesGrid.querySelectorAll('.song-item')]
+      .find(el => el.dataset.id === id);
+    if (!item) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    item.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+
+    categoriesGrid.querySelectorAll('.song-item.is-spotlight')
+      .forEach(el => el.classList.remove('is-spotlight'));
+    clearTimeout(spotlightTimer);
+    item.classList.add('is-spotlight');
+    spotlightTimer = setTimeout(() => item.classList.remove('is-spotlight'), 2000);
   }
 
   function searchLastCopiedTitle() {
@@ -1783,6 +1816,10 @@
           package: 'jp.nicovideo.android',
         },
       },
+      google: {
+        fallback: `https://www.google.com/search?q=${encodedQuery}`,
+        browserOnly: true,
+      },
     };
     const platform = platforms[goSite];
     if (!platform) {
@@ -1795,7 +1832,7 @@
     const fallbackUrl = isIOS || isAndroid
       ? (platform.mobileFallback || platform.fallback)
       : platform.fallback;
-    if (!isAndroid && !isIOS) {
+    if (platform.browserOnly || (!isAndroid && !isIOS)) {
       openSearchUrl(fallbackUrl);
       return;
     }
@@ -1844,6 +1881,7 @@
       bilibili: 'bilibili',
       youtube: 'YouTube',
       niconico: 'niconico',
+      google: 'Google',
     };
     const siteName = siteNames[goSite];
     const label = `在${siteName}搜索上次复制的歌名`;
