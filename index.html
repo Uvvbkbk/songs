@@ -15,7 +15,7 @@
   }
   body {
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: #eef2f9; min-height: 100vh; padding: 1rem;
+    background: #eef2f9; min-height: 100vh; padding: 0 1rem 1rem;
     color: #2d3e5c; font-size: 14px;
     -webkit-font-smoothing: antialiased;
   }
@@ -235,6 +235,19 @@
     .search-row { flex-wrap: wrap; }
     .search-box { flex: 1 1 100%; }
     .sort-btn { margin-left: auto; }
+  }
+  @media (max-width: 600px) {
+    body { padding-inline: 0.65rem; }
+    .sticky-toolbar { padding: 0.45rem; border-radius: 0 0 16px 16px; }
+    .topbar { align-items: flex-start; gap: 0.35rem; }
+    .topbar h1 { font-size: 1rem; }
+    .topbar-right { width: 100%; justify-content: flex-end; gap: 0.35rem; }
+    .search-row { padding-left: 0.1rem; }
+    .form-group,
+    .form-group.title { flex: 1 1 100%; min-width: 0; }
+    .form-buttons { justify-content: flex-end; }
+    .category-card { padding: 0.9rem 0.85rem; }
+    .category-actions { opacity: 1; }
   }
   .go-fab {
     position: fixed; right: calc(1.25rem + env(safe-area-inset-right, 0px));
@@ -468,14 +481,17 @@
 
   /* ============ 歌曲列表 ============ */
   .song-list { list-style: none; padding: 0; margin: 0; }
-  .song-list[hidden] { display: none; }
+  .song-list[hidden] { display: none !important; }
   @container category-card (min-width: 620px) {
-    .song-list--two-columns {
+    body[data-song-layout="double"] .song-list--two-columns {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       column-gap: 1.1rem;
     }
-    .song-list--two-columns .song-item:last-child { border-bottom: 1px dashed #dde6f2; }
+    body[data-song-layout="single"] .song-list--two-columns { display: block; }
+    body[data-song-layout="double"] .song-list--two-columns .song-item:last-child {
+      border-bottom: 1px dashed #dde6f2;
+    }
   }
   .song-item {
     display: flex; align-items: center; gap: 0.6rem;
@@ -548,6 +564,8 @@
   .modal {
     background: #ffffff; border-radius: 16px;
     padding: 1.4rem; max-width: 460px; width: 100%;
+    max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem);
+    overflow-y: auto; overscroll-behavior: contain;
     box-shadow: 0 20px 50px rgba(45,62,92,0.3);
     position: relative;
   }
@@ -608,6 +626,7 @@
     border-top: 1px solid #e5ebf4; margin-top: 0.9rem; padding-top: 0.8rem;
     display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
   }
+  .layout-settings { border-top: 0; margin-top: 0.7rem; padding-top: 0; }
   .effect-settings-copy { display: flex; flex-direction: column; gap: 0.2rem; }
   .effect-settings .modal-label { margin-bottom: 0; }
   .effect-hint { color: #9aabc2; font-size: 0.68rem; line-height: 1.5; }
@@ -1094,6 +1113,14 @@
       </div>
       <small class="csv-hint">导入需要管理模式，会确认后替换当前歌单并同步到云端。</small>
     </div>
+    <div class="effect-settings layout-settings">
+      <div class="effect-settings-copy">
+        <span class="modal-label" id="songLayoutToggleLabel">歌曲列表双列显示</span>
+        <small class="effect-hint">关闭后每个分类显示为单列</small>
+      </div>
+      <button class="switch" id="songLayoutToggleBtn" type="button" role="switch"
+              aria-checked="true" aria-labelledby="songLayoutToggleLabel"></button>
+    </div>
     <div class="effect-settings">
       <div class="effect-settings-copy">
         <span class="modal-label" id="sakuraToggleLabel">樱花特效</span>
@@ -1122,6 +1149,7 @@
   const THEME_KEY = 'song_list_theme';
   const SAKURA_KEY = 'song_list_sakura_enabled';
   const GO_SETTINGS_KEY = 'song_list_go_settings';
+  const SONG_LAYOUT_KEY = 'song_list_layout';
   const GO_SITES = ['bilibili', 'youtube', 'niconico', 'google'];
   const DEFAULT_SEARCH_TEMPLATES = {
     bilibili: '{song} 卡拉ok',
@@ -1173,6 +1201,7 @@
   const formPanel = $('formPanel');
   const formPanelContent = formPanel.querySelector('.form-panel-content');
   let formPanelAnimation = null;
+  let formPanelRevealTimer = 0;
   let formPanelViewportFrame = 0;
   let formPanelViewportVersion = 0;
   const formTitle = $('formTitle');
@@ -1192,6 +1221,7 @@
   const goSearchTemplateInput = $('goSearchTemplateInput');
   const goSettingsCloseBtn = $('goSettingsCloseBtn');
   const sakuraToggleBtn = $('sakuraToggleBtn');
+  const songLayoutToggleBtn = $('songLayoutToggleBtn');
   const exportCsvBtn = $('exportCsvBtn');
   const importCsvBtn = $('importCsvBtn');
   const importCsvInput = $('importCsvInput');
@@ -1314,12 +1344,19 @@
     }
   }
   function setSortMode(mode) {
+    const previousPositions = new Map(
+      [...categoriesGrid.querySelectorAll('.song-item')].map(item => [
+        item.dataset.id,
+        item.getBoundingClientRect(),
+      ])
+    );
     sortMode = mode;
     const label = SORT_MODES.find(m => m.id === mode).label;
     sortBtn.textContent = `排序：${label}`;
     sortBtn.dataset.mode = mode;
     sortBtn.title = `排序：${label}（点击切换）`;
     render();
+    animateSongReorder(previousPositions);
   }
 
   function updateStats() {
@@ -1544,7 +1581,7 @@
             <span class="category-count">${list.length}</span>
             ${catActions}
           </div>
-          <ul class="song-list${list.length >= 12 ? ' song-list--two-columns' : ''}" id="${listId}"${isCollapsed ? ' hidden' : ''}>
+          <ul class="song-list song-list--two-columns" id="${listId}"${isCollapsed ? ' hidden' : ''}>
             ${list.map((s, i) => renderItem(s, i + 1)).join('')}
           </ul>
         </div>
@@ -1672,6 +1709,23 @@
     filterTransitionTimer = setTimeout(() => {
       categoriesGrid.classList.remove('filter-transition');
     }, 220);
+  }
+
+  function animateSongReorder(previousPositions) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    categoriesGrid.querySelectorAll('.song-item').forEach(item => {
+      const previous = previousPositions.get(item.dataset.id);
+      if (!previous) return;
+      const current = item.getBoundingClientRect();
+      if (!previous.width || !current.width) return;
+      const x = previous.left - current.left;
+      const y = previous.top - current.top;
+      if (Math.abs(x) < 1 && Math.abs(y) < 1) return;
+      item.animate(
+        [{ transform: `translate(${x}px, ${y}px)` }, { transform: 'translate(0, 0)' }],
+        { duration: 240, easing: 'cubic-bezier(0.2, 0.75, 0.25, 1)' }
+      );
+    });
   }
 
   const categoryListAnimations = new WeakMap();
@@ -1905,6 +1959,15 @@
   function updateSakuraToggle() {
     sakuraToggleBtn.setAttribute('aria-checked', String(sakuraEnabled));
     sakuraToggleBtn.title = sakuraEnabled ? '点击关闭樱花特效' : '点击打开樱花特效';
+  }
+
+  let songListTwoColumns = true;
+  function applySongListLayout(twoColumns, persist = false) {
+    songListTwoColumns = Boolean(twoColumns);
+    document.body.dataset.songLayout = songListTwoColumns ? 'double' : 'single';
+    songLayoutToggleBtn.setAttribute('aria-checked', String(songListTwoColumns));
+    songLayoutToggleBtn.title = songListTwoColumns ? '当前为双列显示，点击切换为单列' : '当前为单列显示，点击切换为双列';
+    if (persist) localStorage.setItem(SONG_LAYOUT_KEY, songListTwoColumns ? 'double' : 'single');
   }
 
   function closeGoSettings() {
@@ -2467,7 +2530,44 @@
       currentSearch = searchInput.value;
       render();
     });
-    goBtn.addEventListener('click', searchLastCopiedTitle);
+    let goLongPressTimer = 0;
+    let goLongPressTriggered = false;
+    let goPointerStart = null;
+    const cancelGoLongPress = () => {
+      clearTimeout(goLongPressTimer);
+      goLongPressTimer = 0;
+      goPointerStart = null;
+    };
+    goBtn.addEventListener('pointerdown', e => {
+      if (!e.isPrimary || e.button !== 0) return;
+      cancelGoLongPress();
+      goLongPressTriggered = false;
+      goPointerStart = { x: e.clientX, y: e.clientY };
+      goLongPressTimer = window.setTimeout(() => {
+        goLongPressTriggered = true;
+        cycleGoSite();
+      }, 550);
+    });
+    goBtn.addEventListener('pointermove', e => {
+      if (!goPointerStart) return;
+      if (Math.hypot(e.clientX - goPointerStart.x, e.clientY - goPointerStart.y) > 12) {
+        cancelGoLongPress();
+      }
+    });
+    goBtn.addEventListener('pointerup', cancelGoLongPress);
+    goBtn.addEventListener('pointercancel', () => {
+      cancelGoLongPress();
+      goLongPressTriggered = false;
+    });
+    goBtn.addEventListener('contextmenu', e => e.preventDefault());
+    goBtn.addEventListener('click', e => {
+      if (goLongPressTriggered) {
+        goLongPressTriggered = false;
+        e.preventDefault();
+        return;
+      }
+      searchLastCopiedTitle();
+    });
     window.addEventListener('keydown', e => {
       if (!e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
       if (e.code === 'KeyB') {
@@ -2603,6 +2703,9 @@
     sakuraToggleBtn.addEventListener('click', () => {
       applySakuraEnabled(!sakuraEnabled, true);
       updateSakuraToggle();
+    });
+    songLayoutToggleBtn.addEventListener('click', () => {
+      applySongListLayout(!songListTwoColumns, true);
     });
     goSearchTemplateInput.addEventListener('input', () => {
       applyGoSearchTemplate(goSearchTemplateInput.value);
@@ -2802,6 +2905,12 @@
     updateSakuraToggle();
   } catch (e) {
     console.warn('无法读取樱花特效设置，使用默认值', e);
+  }
+  try {
+    applySongListLayout(localStorage.getItem(SONG_LAYOUT_KEY) !== 'single');
+  } catch (e) {
+    console.warn('无法读取歌单布局设置，使用默认双列', e);
+    applySongListLayout(true);
   }
   updateGoButtonLabel();
   setTheme(localStorage.getItem(THEME_KEY));
