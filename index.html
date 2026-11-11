@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
 <title>歌える曲リスト</title>
 <link rel="manifest" href="./manifest.json">
 <style>
@@ -21,6 +22,47 @@
   }
 
   .app { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; }
+  .song-detail {
+    position: relative; z-index: 1; width: min(860px, 100%);
+    margin: clamp(1rem, 5vh, 3rem) auto; padding: clamp(1rem, 4vw, 2rem);
+    border: 1px solid var(--theme-border, #cdd9ea); border-radius: 20px;
+    background: var(--theme-primary-tint, #fff);
+    box-shadow: 0 12px 36px var(--theme-shadow, rgba(59,85,120,0.12));
+  }
+  .song-detail[hidden] { display: none; }
+  .song-detail-back {
+    display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1.25rem;
+    color: var(--theme-secondary-text, #4a6a94); text-decoration: none; font-weight: 650;
+  }
+  .song-detail-back:hover { color: var(--theme-primary-dark, #4a6a94); }
+  .song-detail h1 { color: var(--theme-heading, #3b5578); font-size: clamp(1.35rem, 4vw, 2rem); }
+  .song-detail-category { margin-top: 0.35rem; color: var(--theme-muted, #7a8ba8); }
+  .song-detail-editor { margin-top: 1.5rem; }
+  .song-detail-editor label { display: block; margin-bottom: 0.45rem; color: var(--theme-secondary-text, #4a6a94); font-weight: 700; }
+  .song-detail-url-row { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+  .song-detail-url {
+    flex: 1 1 280px; min-width: 0; height: 42px; padding: 0 0.8rem;
+    border: 1px solid var(--theme-border, #cdd9ea); border-radius: 10px;
+    background: var(--theme-input, #fff); color: var(--theme-text, #2d3e5c);
+    font: inherit;
+  }
+  .song-detail-url:focus { outline: 2px solid var(--theme-primary, #6c8fc7); outline-offset: 1px; }
+  .song-detail-save {
+    min-height: 42px; padding: 0 1rem; border: 0; border-radius: 10px;
+    background: var(--theme-primary, #6c8fc7); color: #fff;
+    font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .song-detail-save:disabled { opacity: 0.6; cursor: wait; }
+  .song-detail-status { min-height: 1.4em; margin-top: 0.45rem; color: var(--theme-muted, #7a8ba8); font-size: 0.82rem; }
+  .song-detail-player { margin-top: 1.25rem; overflow: hidden; border-radius: 14px; background: #111; }
+  .song-detail-player iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+  .song-detail-empty {
+    padding: 2.5rem 1rem; color: var(--theme-muted, #7a8ba8);
+    background: var(--theme-primary-soft, #f3f6fb); text-align: center;
+  }
+  .song-detail-watch { display: inline-block; margin: 0.8rem; color: var(--theme-primary-dark, #4a6a94); }
+  body.is-song-detail .app,
+  body.is-song-detail #goBtn { display: none; }
 
   .sticky-toolbar {
     position: sticky; top: 0; z-index: 60;
@@ -113,6 +155,8 @@
   }
   .sidebar-backdrop.is-open { opacity: 1; visibility: visible; }
   .sidebar.is-open { transform: translateX(0); visibility: visible; pointer-events: auto; }
+  .sidebar-backdrop.is-dragging { visibility: visible; pointer-events: none; transition: none; }
+  .sidebar.is-dragging { visibility: visible; pointer-events: none; transition: none; }
   .sidebar-header {
     display: flex; align-items: center; justify-content: space-between;
     gap: 0.75rem; padding: 0.1rem 0 0.9rem;
@@ -589,10 +633,16 @@
   .song-item.is-spotlight { background: #e8eff9; }
   body[data-theme] .song-item.is-spotlight { background: var(--theme-primary-soft); }
   .song-number {
-    font-size: 0.9rem; font-weight: 700; color: #8ba9d4;
-    min-width: 1.6rem; text-align: right; flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; flex: 0 0 30px;
+    border: 0; border-radius: 50%; padding: 0;
+    background: transparent; color: #8ba9d4;
+    font: 700 0.9rem/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-variant-numeric: tabular-nums; cursor: pointer;
+    transition: background-color 140ms ease, color 140ms ease;
   }
+  .song-number:hover { background: #e8eff9; color: #4a6a94; }
+  .song-number:active { background: #dce7f5; }
   .song-title {
     flex: 1; font-size: 0.92rem; color: #2d3e5c;
     font-weight: 500; line-height: 1.4; word-break: break-word; min-width: 0;
@@ -665,6 +715,18 @@
   .modal p {
     font-size: 0.82rem; color: #7a8ba8; margin-bottom: 0.8rem; line-height: 1.6;
   }
+  .auth-settings {
+    border-block: 1px solid #e5ebf4; margin: 0.8rem 0 1rem; padding: 0.8rem 0;
+  }
+  .auth-settings > p { margin-bottom: 0.55rem; }
+  .auth-settings input { margin-bottom: 0.55rem; }
+  .auth-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .auth-actions [hidden] { display: none; }
+  .auth-status {
+    display: block; min-height: 1.2em; margin-top: 0.5rem;
+    color: var(--theme-muted, #7a8ba8); font-size: 0.72rem;
+  }
+  .auth-token-link { display: inline-block; margin-top: 0.35rem; font-size: 0.75rem; }
   .modal input,
   .modal select {
     width: 100%; padding: 0 0.85rem; height: 36px;
@@ -954,6 +1016,8 @@
     color: var(--theme-text); border-color: var(--theme-border); background: var(--theme-input);
   }
   body[data-theme] .modal-label { color: var(--theme-muted); }
+  body[data-theme] .auth-settings { border-color: var(--theme-border-soft); }
+  body[data-theme] .auth-status { color: var(--theme-muted); }
   body[data-theme] .go-shortcut-hint { color: var(--theme-muted); }
   body[data-theme] .effect-hint { color: var(--theme-muted); }
   body[data-theme] .form-group input::placeholder,
@@ -1007,6 +1071,8 @@
   body[data-theme] .song-item.is-selected { background: var(--theme-row-hover); }
   body[data-theme] .song-item:active { background: var(--theme-primary-soft); }
   body[data-theme] .song-number { color: var(--theme-number); }
+  body[data-theme] .song-number:hover { background: var(--theme-primary-tint); color: var(--theme-primary-dark); }
+  body[data-theme] .song-number:active { background: var(--theme-primary-selected); }
   body[data-theme] .tag-pill { background: var(--theme-primary-tint); color: var(--theme-primary); }
   body[data-theme] .no-tag,
   body[data-theme] .empty-message,
@@ -1108,10 +1174,25 @@
 </head>
 <body>
 <div class="sakura-layer" id="sakuraBackground" aria-hidden="true"></div>
+<main class="song-detail" id="songDetailView" hidden>
+  <a class="song-detail-back" id="songDetailBack" href="./index.html">← 返回歌单</a>
+  <h1 id="songDetailTitle">歌曲 MV</h1>
+  <p class="song-detail-category" id="songDetailCategory"></p>
+  <section class="song-detail-editor" aria-label="歌曲 MV 地址">
+    <label for="songDetailUrl">Bilibili / YouTube / niconico 视频网址</label>
+    <div class="song-detail-url-row">
+      <input class="song-detail-url" id="songDetailUrl" type="url" inputmode="url"
+             placeholder="粘贴视频播放页网址" autocomplete="url">
+      <button class="song-detail-save" id="songDetailSave" type="button">保存 MV</button>
+    </div>
+    <p class="song-detail-status" id="songDetailStatus" role="status" aria-live="polite"></p>
+  </section>
+  <section class="song-detail-player" id="songDetailPlayer" aria-label="MV 播放器"></section>
+</main>
 <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="关闭侧边栏" aria-hidden="true" tabindex="-1"></button>
 <aside class="sidebar" id="sidebar" aria-label="侧边栏" aria-hidden="true" inert>
   <div class="sidebar-header">
-    <h2 class="sidebar-title">快速导航</h2>
+    <h2 class="sidebar-title">侧边栏</h2>
     <button class="sidebar-close" id="sidebarCloseBtn" type="button" aria-label="关闭侧边栏" title="关闭侧边栏">✕</button>
   </div>
   <nav aria-label="快速跳转分类">
@@ -1119,7 +1200,7 @@
     <div class="sidebar-categories" id="sidebarCategories"></div>
   </nav>
   <div class="sidebar-actions">
-    <button class="theme-toggle" id="goSettingsBtn" type="button" title="设置 Go!! 搜索">
+    <button class="theme-toggle" id="goSettingsBtn" type="button" title="设置与登录">
       <span>⚙️设置</span>
     </button>
     <button class="theme-toggle" id="themeToggleBtn" type="button" title="切换主题">
@@ -1135,7 +1216,7 @@
       <button class="stats" id="statsDisplay" type="button" title="全部收起分类" aria-label="全部收起分类">— 首</button>
       <button class="sidebar-toggle" id="sidebarToggleBtn" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="显示侧边栏" title="显示侧边栏">
         <span class="sidebar-toggle-icon" aria-hidden="true"><span></span><span></span><span></span></span>
-        <span>导航</span>
+        <span>侧边栏</span>
       </button>
     </div>
   </div>
@@ -1195,28 +1276,22 @@
 <button class="go-fab" id="goBtn" type="button" title="在哔哩哔哩搜索上次复制的歌名"
         aria-label="在哔哩哔哩搜索上次复制的歌名">Go!!<span class="go-site-caption" id="goSiteCaption">bilibili</span></button>
 
-<!-- 登录模态框 -->
-<div class="modal-mask" id="loginModal">
-  <div class="modal">
-    <h3>🔑 进入管理模式</h3>
-    <p>
-      粘贴你的 GitHub Personal Access Token（需勾选 <code>gist</code> 权限）。<br>
-      Token 只保存在本机浏览器，不会上传。<br>
-      没有 Token？<a href="https://github.com/settings/tokens/new?scopes=gist&description=MySongs" target="_blank">点这里创建一个 →</a>
-    </p>
-    <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
-    <div class="modal-actions">
-      <button class="btn btn-secondary" id="loginCancelBtn">取消</button>
-      <button class="btn btn-primary" id="loginOkBtn">确定</button>
-    </div>
-  </div>
-</div>
-
 <!-- Go!! 设置模态框 -->
 <div class="modal-mask" id="goSettingsModal">
   <div class="modal">
     <button class="modal-close" id="goSettingsCloseBtn" type="button" aria-label="关闭设置" title="关闭设置">✕</button>
     <h3>⚙️ 设置</h3>
+    <div class="auth-settings">
+      <span class="modal-label">管理模式登录</span>
+      <p>输入有 <code>gist</code> 权限的 GitHub Token。Token 仅保存在本机；登录一次后可通过头像随时切换编辑模式。</p>
+      <input type="password" id="tokenInput" placeholder="GitHub Personal Access Token" autocomplete="off">
+      <div class="auth-actions">
+        <button class="btn btn-primary" id="loginOkBtn" type="button">登录并启用编辑模式</button>
+        <button class="btn btn-secondary" id="clearTokenBtn" type="button" hidden>清除已保存的 Token</button>
+      </div>
+      <small class="auth-status" id="authStatus" role="status" aria-live="polite"></small>
+      <a class="auth-token-link" href="https://github.com/settings/tokens/new?scopes=gist&description=MySongs" target="_blank" rel="noopener noreferrer">没有 Token？点这里创建 →</a>
+    </div>
     <p>设置 Go!! 按钮打开的网站和搜索词，修改会立即生效。搜索词中的 <code>{song}</code> 会替换为刚复制的歌曲名。</p>
     <span class="modal-label" id="goSiteLabel">前往网站</span>
     <div class="go-site-options" id="goSiteOptions" role="group" aria-labelledby="goSiteLabel">
@@ -1270,6 +1345,9 @@
   };
 
   const UNCATEGORIZED = '未分类';
+  const PAGE_TITLE = document.title;
+  let songDetailId = new URLSearchParams(window.location.search).get('song');
+  let songDetailHistoryEntry = false;
   const TOKEN_KEY = 'gh_gist_token';
   const THEME_KEY = 'song_list_theme';
   const SAKURA_KEY = 'song_list_sakura_enabled';
@@ -1316,6 +1394,14 @@
   // ---------- DOM ----------
   const $ = id => document.getElementById(id);
   const categoriesGrid = $('categoriesGrid');
+  const songDetailView = $('songDetailView');
+  const songDetailBack = $('songDetailBack');
+  const songDetailTitle = $('songDetailTitle');
+  const songDetailCategory = $('songDetailCategory');
+  const songDetailUrl = $('songDetailUrl');
+  const songDetailSave = $('songDetailSave');
+  const songDetailStatus = $('songDetailStatus');
+  const songDetailPlayer = $('songDetailPlayer');
   const sidebar = $('sidebar');
   const sidebarBackdrop = $('sidebarBackdrop');
   const sidebarToggleBtn = $('sidebarToggleBtn');
@@ -1355,10 +1441,10 @@
   const exportCsvBtn = $('exportCsvBtn');
   const importCsvBtn = $('importCsvBtn');
   const importCsvInput = $('importCsvInput');
-  const loginModal = $('loginModal');
   const tokenInput = $('tokenInput');
   const loginOkBtn = $('loginOkBtn');
-  const loginCancelBtn = $('loginCancelBtn');
+  const clearTokenBtn = $('clearTokenBtn');
+  const authStatus = $('authStatus');
 
   const categoryDropdownBtn = $('categoryDropdownBtn');
   const tagsDropdownBtn = $('tagsDropdownBtn');
@@ -1921,12 +2007,196 @@
 
     return `
       <li class="song-item${String(song.id) === selectedSongId ? ' is-selected' : ''}" data-id="${song.id}" data-title="${escapeHtml(song.title)}">
-        <span class="song-number">${num}.</span>
+        <button class="song-number" type="button" data-song-detail="${song.id}"
+                aria-label="打开《${escapeHtml(song.title)}》的 MV 页面" title="打开歌曲 MV 页面">${num}.</button>
         <span class="song-title">${escapeHtml(song.title)}</span>
         <span class="song-tags">${tagsHtml}</span>
         ${actions}
       </li>
     `;
+  }
+
+  function openSongDetail(songId) {
+    const url = new URL('./index.html', window.location.href);
+    url.searchParams.set('song', songId);
+    songDetailHistoryEntry = true;
+    history.pushState({ songDetail: true }, '', url);
+    showSongDetail(songId);
+  }
+
+  function showSongDetail(songId) {
+    songDetailId = String(songId);
+    document.body.classList.add('is-song-detail');
+    songDetailView.hidden = false;
+    renderSongDetail(songs.find(song => String(song.id) === songDetailId));
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function closeSongDetail() {
+    if (songDetailHistoryEntry) {
+      history.back();
+      return;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('song');
+    history.replaceState(history.state, '', url);
+    updateSongDetailRoute();
+  }
+
+  function updateSongDetailRoute() {
+    songDetailId = new URLSearchParams(window.location.search).get('song');
+    songDetailHistoryEntry = false;
+    if (songDetailId) {
+      document.body.classList.add('is-song-detail');
+      songDetailView.hidden = false;
+      renderSongDetail(songs.find(song => String(song.id) === songDetailId));
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      return;
+    }
+    document.body.classList.remove('is-song-detail');
+    songDetailView.hidden = true;
+    songDetailPlayer.replaceChildren();
+    document.title = PAGE_TITLE;
+  }
+
+  function parseVideoUrl(value) {
+    let url;
+    try {
+      const input = value.trim();
+      url = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`);
+    } catch {
+      return null;
+    }
+    if (url.protocol !== 'https:') return null;
+    const host = url.hostname.toLowerCase();
+
+    if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'youtube-nocookie.com'].includes(host)) {
+      const videoId = host === 'youtu.be'
+        ? url.pathname.split('/').filter(Boolean)[0]
+        : url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|shorts|live)\/([^/?]+)/)?.[1];
+      if (!videoId || !/^[\w-]{11}$/.test(videoId)) return null;
+      return {
+        provider: 'YouTube',
+        url: url.href,
+        src: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`,
+      };
+    }
+
+    if (['bilibili.com', 'www.bilibili.com', 'm.bilibili.com', 'b23.tv'].includes(host)) {
+      const videoPath = url.pathname.match(/^\/video\/(BV[\da-zA-Z]{10}|av\d+)/i);
+      if (!videoPath) return null;
+      const videoId = videoPath[1];
+      const page = url.searchParams.get('p');
+      const src = videoId.toLowerCase().startsWith('bv')
+        ? `https://player.bilibili.com/player.html?bvid=${encodeURIComponent(videoId)}${page ? `&page=${encodeURIComponent(page)}` : ''}&danmaku=0`
+        : `https://player.bilibili.com/player.html?aid=${videoId.slice(2)}${page ? `&page=${encodeURIComponent(page)}` : ''}&danmaku=0`;
+      return { provider: 'Bilibili', url: url.href, src };
+    }
+
+    if (['nicovideo.jp', 'www.nicovideo.jp', 'sp.nicovideo.jp'].includes(host)) {
+      const videoId = url.pathname.match(/^\/(?:watch\/)?((?:sm|so|nm)\d+)/i)?.[1];
+      if (!videoId) return null;
+      return {
+        provider: 'niconico',
+        url: url.href,
+        src: `https://embed.nicovideo.jp/watch/${encodeURIComponent(videoId)}`,
+      };
+    }
+    return null;
+  }
+
+  function renderSongDetail(song) {
+    if (!songDetailId) return;
+    if (!song) {
+      songDetailTitle.textContent = '找不到这首歌';
+      songDetailCategory.textContent = '';
+      songDetailStatus.textContent = '请返回歌单确认歌曲是否仍存在。';
+      songDetailPlayer.innerHTML = '<p class="song-detail-empty">歌曲不存在或已被删除。</p>';
+      return;
+    }
+
+    songDetailTitle.textContent = song.title;
+    document.title = `${song.title} · MV`;
+    const category = (song.category || '').trim() || UNCATEGORIZED;
+    songDetailCategory.textContent = `${category} · ${song.tags?.length || 0} 个标签`;
+    songDetailUrl.value = song.mvUrl || '';
+    const video = song.mvUrl ? parseVideoUrl(song.mvUrl) : null;
+    songDetailPlayer.replaceChildren();
+    if (!video) {
+      const placeholder = document.createElement('p');
+      placeholder.className = 'song-detail-empty';
+      placeholder.textContent = song.mvUrl
+        ? '保存的网址目前无法识别，请检查是否为 Bilibili、YouTube 或 niconico 视频链接。'
+        : '还没有添加 MV。粘贴视频播放页网址后保存即可。';
+      songDetailPlayer.append(placeholder);
+      return;
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.src = video.src;
+    iframe.title = `${song.title} - ${video.provider} MV`;
+    iframe.loading = 'lazy';
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    songDetailPlayer.append(iframe);
+
+    const watchLink = document.createElement('a');
+    watchLink.className = 'song-detail-watch';
+    watchLink.href = video.url;
+    watchLink.target = '_blank';
+    watchLink.rel = 'noopener noreferrer';
+    watchLink.textContent = `无法播放？前往 ${video.provider} 打开`;
+    songDetailPlayer.append(watchLink);
+  }
+
+  async function saveSongDetailVideo() {
+    if (!songDetailId) return;
+    const inputUrl = songDetailUrl.value.trim();
+    const video = inputUrl ? parseVideoUrl(inputUrl) : null;
+    if (inputUrl && !video) {
+      songDetailStatus.textContent = '请输入有效的 Bilibili、YouTube 或 niconico 视频网址。';
+      return;
+    }
+    if (!token) {
+      songDetailStatus.textContent = '请先在侧边栏「设置」中登录，再保存 MV。';
+      return;
+    }
+
+    songDetailSave.disabled = true;
+    songDetailStatus.textContent = '正在保存到 GitHub Gist...';
+    try {
+      const latestSongs = await fetchGist();
+      const songExists = latestSongs.some(song => String(song.id) === songDetailId);
+      if (!songExists) throw new Error('这首歌已从歌单中删除，请返回歌单刷新。');
+      const updatedSongs = latestSongs.map(song => {
+        if (String(song.id) !== songDetailId) return song;
+        const updated = { ...song };
+        if (video) updated.mvUrl = video.url;
+        else delete updated.mvUrl;
+        return updated;
+      });
+      await updateGist(updatedSongs);
+      songs = updatedSongs;
+      songDetailStatus.textContent = video ? `已保存 ${video.provider} MV。` : '已移除这首歌的 MV 地址。';
+      renderSongDetail(songs.find(song => String(song.id) === songDetailId));
+    } catch (error) {
+      console.error(error);
+      songDetailStatus.textContent = `保存失败：${error.message}`;
+      if (/401|403/.test(error.message)) {
+        token = '';
+        try {
+          localStorage.removeItem(TOKEN_KEY);
+        } catch (storageError) {
+          console.error(storageError);
+        }
+        if (isAdmin) setAdminUI(false);
+        else updateAuthSettings();
+        songDetailStatus.textContent += ' 登录已失效，请到侧边栏「设置」重新登录后重试。';
+      }
+    } finally {
+      songDetailSave.disabled = false;
+    }
   }
 
   // ============================================================
@@ -2119,8 +2389,9 @@
     updateGoSiteOptions();
     goSearchTemplateInput.value = currentGoSearchTemplate();
     updateSakuraToggle();
+    updateAuthSettings();
     goSettingsModal.classList.add('show');
-    goSiteOptions.querySelector('[aria-pressed="true"]').focus();
+    (token ? goSiteOptions.querySelector('[aria-pressed="true"]') : tokenInput).focus();
   }
 
   function setSidebarOpen(open) {
@@ -2213,7 +2484,7 @@
   }
 
   function cycleGoSite() {
-    if (loginModal.classList.contains('show')) return;
+    if (goSettingsModal.classList.contains('show')) return;
     const nextSite = GO_SITES[(GO_SITES.indexOf(goSite) + 1) % GO_SITES.length];
     applyGoSite(nextSite);
   }
@@ -2519,17 +2790,31 @@
   function setAdminUI(admin) {
     isAdmin = admin;
     if (admin) {
-      avatarEntry.setAttribute('aria-label', '退出管理模式');
-      avatarEntry.title = '点击退出管理模式；右键可彻底登出';
+      avatarEntry.setAttribute('aria-label', '切换到访客模式');
+      avatarEntry.title = '点击切换到访客模式';
       setFormPanelExpanded(true);
     } else {
-      avatarEntry.setAttribute('aria-label', '进入管理模式');
-      avatarEntry.title = '点击头像进入管理模式';
+      avatarEntry.setAttribute('aria-label', '切换到编辑模式');
+      avatarEntry.title = '点击切换到编辑模式';
       setFormPanelExpanded(false);
       resetForm();
     }
+    updateAuthSettings();
     renderTagFilter();
     render();
+  }
+
+  function updateAuthSettings() {
+    const hasSavedToken = Boolean(token);
+    if (isAdmin) {
+      authStatus.textContent = '已登录 · 当前为编辑模式。点击头像可切换到访客模式。';
+    } else if (hasSavedToken) {
+      authStatus.textContent = '登录凭据已保存 · 点击头像可切换到编辑模式。';
+    } else {
+      authStatus.textContent = '尚未登录 · 登录后可随时切换编辑模式。';
+    }
+    loginOkBtn.textContent = hasSavedToken ? '重新登录 / 更换 Token' : '登录并启用编辑模式';
+    clearTokenBtn.hidden = !hasSavedToken;
   }
 
   function setFormPanelExpanded(expanded) {
@@ -2639,21 +2924,26 @@
     if (!t) { showToast('⚠️ 请输入 Token'); return; }
     if (!isConfigured()) { showToast('⚠️ 请先在代码里配置 GIST_ID'); return; }
 
+    const previousToken = token;
+    loginOkBtn.disabled = true;
     try {
-      showToast('⏳ 验证中...');
+      authStatus.textContent = '正在验证 GitHub Token...';
       token = t;
       const latestSongs = await fetchGist();
       localStorage.setItem(TOKEN_KEY, t);
-      loginModal.classList.remove('show');
       tokenInput.value = '';
       songs = latestSongs;
       updateQuickPanels();
       setAdminUI(true);
+      closeGoSettings();
       showToast(`🔓 已进入管理模式（${songs.length} 首）`);
     } catch (e) {
-      token = '';
+      token = previousToken;
       console.error(e);
+      authStatus.textContent = `登录失败：${e.message}`;
       showToast(`❌ Token 无效或无权限`);
+    } finally {
+      loginOkBtn.disabled = false;
     }
   }
 
@@ -2662,27 +2952,66 @@
     showToast('👋 已切到访客视角（Token 已记住）');
   }
 
-  async function openLogin() {
-    const savedToken = localStorage.getItem(TOKEN_KEY);
-    if (savedToken && isConfigured()) {
+  async function toggleAdminMode() {
+    if (avatarEntry.getAttribute('aria-busy') === 'true') return;
+    if (isAdmin) {
+      logout();
+      return;
+    }
+
+    if (!token) {
       try {
-        showToast('⏳ 正在用已保存的 Token 登录...');
-        token = savedToken;
-        const latestSongs = await fetchGist();
-        songs = latestSongs;
-        updateQuickPanels();
-        setAdminUI(true);
-        showToast(`🔓 欢迎回来（${songs.length} 首）`);
+        token = localStorage.getItem(TOKEN_KEY) || '';
+      } catch (error) {
+        console.error(error);
+        showToast('❌ 无法读取本机保存的登录凭据');
         return;
-      } catch (e) {
-        console.warn('保存的 Token 已失效', e);
-        token = '';
-        localStorage.removeItem(TOKEN_KEY);
-        showToast('⚠️ 保存的 Token 已失效，请重新输入');
       }
     }
-    loginModal.classList.add('show');
-    tokenInput.focus();
+    if (!token) {
+      showToast('⚠️ 尚未登录，请先在侧边栏「设置」中登录');
+      return;
+    }
+
+    avatarEntry.setAttribute('aria-busy', 'true');
+    try {
+      const latestSongs = await fetchGist();
+      songs = latestSongs;
+      updateQuickPanels();
+      setAdminUI(true);
+      showToast(`🔓 已切换到编辑模式（${songs.length} 首）`);
+    } catch (error) {
+      console.error(error);
+      if (/401|403/.test(error.message)) {
+        token = '';
+        try {
+          localStorage.removeItem(TOKEN_KEY);
+        } catch (storageError) {
+          console.error(storageError);
+        }
+        updateAuthSettings();
+        showToast('⚠️ 登录已失效，请到侧边栏「设置」重新登录');
+      } else {
+        showToast('❌ 无法验证登录状态，请检查网络后重试');
+      }
+    } finally {
+      avatarEntry.removeAttribute('aria-busy');
+    }
+  }
+
+  function clearSavedToken() {
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+    } catch (error) {
+      console.error(error);
+      showToast('❌ 无法清除本机保存的 Token');
+      return;
+    }
+    token = '';
+    if (isAdmin) setAdminUI(false);
+    tokenInput.value = '';
+    updateAuthSettings();
+    showToast('🔒 已清除保存的 Token');
   }
 
   // ============================================================
@@ -2708,6 +3037,7 @@
       updateQuickPanels();
       renderTagFilter();
       render();
+      if (songDetailId) renderSongDetail(songs.find(song => String(song.id) === songDetailId));
     } catch (e) {
       console.error(e);
       categoriesGrid.innerHTML = `
@@ -2715,6 +3045,11 @@
           <span>⚠️</span>
           加载失败：${escapeHtml(e.message)}
         </div>`;
+      if (songDetailId) {
+        songDetailView.hidden = false;
+        songDetailTitle.textContent = '歌曲 MV';
+        songDetailStatus.textContent = `加载歌曲失败：${e.message}`;
+      }
     }
   }
 
@@ -2722,6 +3057,15 @@
   // 事件绑定
   // ============================================================
   function bindEvents() {
+    songDetailSave.addEventListener('click', saveSongDetailVideo);
+    songDetailBack.addEventListener('click', e => {
+      e.preventDefault();
+      closeSongDetail();
+    });
+    songDetailUrl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveSongDetailVideo();
+    });
+    window.addEventListener('popstate', updateSongDetailRoute);
     formPanel.addEventListener('transitionend', e => {
       if (e.propertyName !== 'max-height' || !formPanel.classList.contains('show')) return;
       clearTimeout(formPanelRevealTimer);
@@ -2852,31 +3196,14 @@
       });
     });
 
-    // 头像作为隐藏管理入口
+    // 头像切换访客与编辑模式
     avatarEntry.setAttribute('role', 'button');
     avatarEntry.tabIndex = 0;
-    avatarEntry.addEventListener('click', () => {
-      if (isAdmin) logout();
-      else openLogin();
-    });
+    avatarEntry.addEventListener('click', toggleAdminMode);
     avatarEntry.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        if (isAdmin) logout();
-        else openLogin();
-      }
-    });
-
-    // 右键彻底登出
-    avatarEntry.addEventListener('contextmenu', (e) => {
-      if (isAdmin) {
-        e.preventDefault();
-        if (confirm('彻底登出？将清除本地保存的 Token，下次需要重新输入。')) {
-          token = '';
-          localStorage.removeItem(TOKEN_KEY);
-          setAdminUI(false);
-          showToast('🔒 已彻底登出，Token 已清除');
-        }
+        toggleAdminMode();
       }
     });
 
@@ -2884,6 +3211,12 @@
       setSidebarOpen(sidebarToggleBtn.getAttribute('aria-expanded') !== 'true');
     });
     let edgeSwipeStart = null;
+    const clearEdgeSwipePreview = () => {
+      sidebar.classList.remove('is-dragging');
+      sidebarBackdrop.classList.remove('is-dragging');
+      sidebar.style.removeProperty('transform');
+      sidebarBackdrop.style.removeProperty('opacity');
+    };
     document.addEventListener('touchstart', e => {
       if (sidebar.classList.contains('is-open') || e.touches.length !== 1) {
         edgeSwipeStart = null;
@@ -2891,28 +3224,62 @@
       }
       const touch = e.touches[0];
       edgeSwipeStart = touch.clientX <= 28
-        ? { x: touch.clientX, y: touch.clientY }
+        ? { x: touch.clientX, y: touch.clientY, currentX: touch.clientX, dragging: false }
         : null;
     }, { passive: true });
     document.addEventListener('touchmove', e => {
       if (!edgeSwipeStart || e.touches.length !== 1) return;
       const touch = e.touches[0];
-      if (Math.abs(touch.clientY - edgeSwipeStart.y) > Math.abs(touch.clientX - edgeSwipeStart.x)) {
+      const deltaX = touch.clientX - edgeSwipeStart.x;
+      const deltaY = touch.clientY - edgeSwipeStart.y;
+      if (!edgeSwipeStart.dragging && Math.abs(deltaY) > Math.abs(deltaX)) {
         edgeSwipeStart = null;
+        return;
       }
-    }, { passive: true });
+      if (deltaX < 0) {
+        edgeSwipeStart = null;
+        return;
+      }
+      if (deltaX < 4) return;
+
+      if (!edgeSwipeStart.dragging) {
+        edgeSwipeStart.dragging = true;
+        sidebar.classList.add('is-dragging');
+        sidebarBackdrop.classList.add('is-dragging');
+      }
+      const width = sidebar.offsetWidth;
+      const progress = Math.min(deltaX, width);
+      edgeSwipeStart.currentX = touch.clientX;
+      sidebar.style.transform = `translateX(${-width + progress}px)`;
+      sidebarBackdrop.style.opacity = String(0.3 * progress / width);
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
     document.addEventListener('touchend', e => {
       if (!edgeSwipeStart) return;
-      const touch = [...e.changedTouches].find(item => item.clientX >= edgeSwipeStart.x);
-      if (touch
-        && touch.clientX - edgeSwipeStart.x >= 64
-        && Math.abs(touch.clientY - edgeSwipeStart.y) <= touch.clientX - edgeSwipeStart.x) {
-        setSidebarOpen(true);
-      }
+      const gesture = edgeSwipeStart;
       edgeSwipeStart = null;
+      if (!gesture.dragging) return;
+
+      const lastTouch = e.changedTouches[0];
+      if (lastTouch) gesture.currentX = lastTouch.clientX;
+      const width = sidebar.offsetWidth;
+      const distance = Math.max(0, gesture.currentX - gesture.x);
+      const shouldOpen = distance >= Math.min(64, width * 0.3);
+      sidebar.classList.remove('is-dragging');
+      sidebarBackdrop.classList.remove('is-dragging');
+      sidebar.offsetWidth;
+      sidebarBackdrop.offsetWidth;
+      sidebar.style.removeProperty('transform');
+      sidebarBackdrop.style.removeProperty('opacity');
+      setSidebarOpen(shouldOpen);
     }, { passive: true });
     document.addEventListener('touchcancel', () => {
+      if (!edgeSwipeStart?.dragging) {
+        edgeSwipeStart = null;
+        return;
+      }
       edgeSwipeStart = null;
+      clearEdgeSwipePreview();
     }, { passive: true });
     sidebarCloseBtn.addEventListener('click', () => setSidebarOpen(false));
     sidebarBackdrop.addEventListener('click', () => setSidebarOpen(false));
@@ -2977,12 +3344,9 @@
       goSearchTemplateInput.blur();
     });
 
-    // 登录框事件
+    // 登录与 Token 管理
     loginOkBtn.addEventListener('click', login);
-    loginCancelBtn.addEventListener('click', () => {
-      loginModal.classList.remove('show');
-      tokenInput.value = '';
-    });
+    clearTokenBtn.addEventListener('click', clearSavedToken);
     tokenInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); login(); }
     });
@@ -2990,8 +3354,6 @@
       mask.addEventListener('click', e => {
         if (e.target !== mask) return;
         if (mask === goSettingsModal) closeGoSettings();
-        else mask.classList.remove('show');
-        if (mask === loginModal) tokenInput.value = '';
       });
     });
 
@@ -3040,6 +3402,12 @@
 
     // 分类区域点击委托
     categoriesGrid.addEventListener('click', e => {
+      const songNumber = e.target.closest('.song-number');
+      if (songNumber) {
+        openSongDetail(songNumber.dataset.songDetail);
+        return;
+      }
+
       // 折叠或展开分类歌单
       const toggle = e.target.closest('.category-toggle');
       if (toggle) {
@@ -3118,10 +3486,24 @@
   // 启动
   // ============================================================
   async function init() {
+    if (songDetailId) {
+      document.body.classList.add('is-song-detail');
+      songDetailView.hidden = false;
+    }
+    let tokenStorageUnavailable = false;
+    try {
+      token = localStorage.getItem(TOKEN_KEY) || '';
+    } catch (error) {
+      tokenStorageUnavailable = true;
+      console.error(error);
+    }
     document.querySelector('.sticky-toolbar').append(formPanel);
     applySakuraEnabled(sakuraEnabled);
     bindEvents();
     setAdminUI(false);
+    if (tokenStorageUnavailable) {
+      authStatus.textContent = '浏览器无法读取本机登录凭据，请检查存储权限。';
+    }
     await loadInitialData();
   }
 
